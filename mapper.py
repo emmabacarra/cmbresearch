@@ -11,7 +11,7 @@ class ViewFits:
     
     def FitsMapper(files, hdul_index, nrows, ncols, cmap, interpolation, 
                    animation=False, interval=None, stretch=None, 
-                   vmin=None, vmax=None, contrast=None, bias=None, power=1, percentile=1):
+                   vmin=None, vmax=None, contrast=None, bias=None, power=1, percentile=1, time_delay=0.1):
         
         if animation == False:
             fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(15, 9))
@@ -45,16 +45,18 @@ class ViewFits:
                 fig, ax = plt.subplots()
                 ax.set_title(search('yr\d+', file).group(), weight='bold', fontsize=17)
                 ax.imshow(data, cmap=cmap, norm=norm, interpolation=interpolation)
+                ax.axis('off')
                 plt.tight_layout(pad=0, h_pad=0, w_pad=2)
                 plt.show()
 
-                time.sleep(0.1)
+                time.sleep(time_delay) # need to fix function architecture to remove lag from loading/manipulating data
                 if file != files[-1]:
                     clear_output(wait=True)
             else:
                 ax = axs[i // 3, i % 3]
                 ax.set_title(search('yr\d+', file).group(), weight='bold', fontsize=17)
                 ax.imshow(data, cmap=cmap, norm=norm, interpolation=interpolation)
+                ax.axis('off')
         
         if animation == False:
             plt.tight_layout(pad=0, h_pad=0.2, w_pad=0.2)
