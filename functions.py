@@ -146,21 +146,26 @@ class net:
                 ax.set_ylabel("Loss")
                 plt.show()
 
-    
-    def evaluate(self, data_loader, x_dim, threshold=0.1):
+
+    def evaluate(self, dataloader, threshold=0.1):
         self.model.eval()
-        total_samples = 0
-        correct_samples = 0
+        total_correct = 0
+        total_pixels = 0
+
         with torch.no_grad():
-            for x, _ in data_loader:
-                x = x.view(self.batch_size, x_dim).to(self.device)
-                outputs, _, _ = self.model(x)
-                mse = nn.functional.mse_loss(outputs, x, reduction='none')
-                mse = mse.view(mse.size(0), -1).mean(dim=1)  # Mean per sample
-                total_samples += mse.size(0)
-                correct_samples += (mse < threshold).sum().item()
-        accuracy = correct_samples / total_samples
-        print(f'Evaluation Accuracy: {accuracy * 100:.2f}%')
+            for images, _ in dataloader:
+                images = images.to(self.device)
+                recon_images, _, _ = self.model(images.view(images.size(0), -1))
+                recon_images = recon_images.view_as(images)
+
+                # Calculate the number of correctly reconstructed pixels
+                correct_pixels = (torch.abs(images - recon_images) < threshold).type(torch.float).sum().item()
+                total_correct += correct_pixels
+                total_pixels += images.numel()
+        
+        accuracy = total_correct / total_pixels
+        print(f'Accuracy: {accuracy:.3f}')
+
 
     # plot latent space
     def plat(self, data_loader):
@@ -207,3 +212,27 @@ class net:
                 x_hat = x_hat.reshape(28, 28).to('cpu').detach().numpy()
                 img[(n-1-i)*w:(n-1-i+1)*w, j*w:(j+1)*w] = x_hat
         plt.imshow(img, extent=[*rangex, *rangey])
+
+    def pgen(self, dataloader, num_images=10):
+        self.model.eval()
+        with torch.no_grad():
+            data_iter = iter(dataloader)
+            images, _ = next(data_iter)
+            images = images[:num_images].to(self.device)
+            
+            recon_images, _, _ = self.model(images.view(num_images, -1))
+            recon_images = recon_images.view(num_images, 1, 28, 28).cpu()
+
+            fig, axes = plt.subplots(2, num_images, figsize=(15, 3))
+            for i in range(num_images):
+                axes[0, i].imshow(images[i].view(28, 28).cpu(), cmap='gray')
+                axes[0, i].axis('off')
+                if i == 0:
+                    axes[0, i].set_title("Original", loc='left')
+
+                axes[1, i].imshow(recon_images[i].view(28, 28), cmap='gray')
+                axes[1, i].axis('off')
+                if i == 0:
+                    axes[1, i].set_title("Reconstructed", loc='left')
+        
+            plt.show()
