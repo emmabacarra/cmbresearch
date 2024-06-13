@@ -224,15 +224,18 @@ class net:
             recon_images = recon_images.view(num_images, 1, 28, 28).cpu()
 
             fig, axes = plt.subplots(2, num_images, figsize=(15, 3))
-            for i in range(num_images):
-                axes[0, i].imshow(images[i].view(28, 28).cpu(), cmap='gray')
-                axes[0, i].axis('off')
-                if i == 0:
-                    axes[0, i].set_title("Original", loc='left')
 
-                axes[1, i].imshow(recon_images[i].view(28, 28), cmap='gray')
-                axes[1, i].axis('off')
+            for i in range(num_images):
+                ax1 = axes[0, i]
+                ax2 = axes[1, i]
+
+                ax1.imshow(images[i].view(28,  28).cpu(), cmap='gray')
                 if i == 0:
-                    axes[1, i].set_title("Reconstructed", loc='left')
+                    ax1.set_ylabel("Original", weight='bold', fontsize=16)
+
+                ax2.imshow(recon_images[i].view(28, 28), cmap='gray')
+                
+                if i == 0:
+                    ax2.set_ylabel("Reconstructed", weight='bold', fontsize=16)
         
             plt.show()
