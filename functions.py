@@ -139,10 +139,14 @@ class net:
                 clear_output(wait=True)
 
                 ax.clear()
-                ax.plot(loss_list, label='Training Loss', linewidth = 3, color = 'blue')
-                ax.plot([i*len(self.trloader) for i in range(epoch+1)], val_list, label='Validation Loss', linewidth = 3, color = 'gold')
-                ax.legend(title=f'Lowest Loss: {min(loss_list):.3f} \nAverage Loss: {np.mean(loss_list):.3f}', bbox_to_anchor=(1, 1), loc='upper left')
-                ax.set_title('Training Performance')
+                ax.plot(loss_list, 
+                        label=f'Training Loss \nLowest: {min(loss_list):.3f} \nAverage: {np.mean(loss_list):.3f} \n', 
+                        linewidth = 3, color = 'blue')
+                ax.plot([i*len(self.trloader) for i in range(epoch+1)], val_list, 
+                        label=f'Validation Loss \nLowest: {min(val_list):.3f} \nAverage: {np.mean(val_list):.3f}', 
+                        linewidth = 3, color = 'gold')
+                ax.legend(bbox_to_anchor=(1, 1), loc='upper left')
+                ax.set_title('Performance')
                 ax.set_ylabel("Loss")
                 plt.show()
 
