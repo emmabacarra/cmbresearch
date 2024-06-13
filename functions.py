@@ -72,13 +72,6 @@ import torch.nn as nn
 from torch.optim import Adam
 import torch.nn.functional as F
 
-# data processing
-from astropy.io import fits
-from torch.utils.data import Dataset, DataLoader
-import torchvision.transforms as transforms
-from torch.utils.data import random_split
-from sklearn.utils import shuffle
-
 # plotting & visualization
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -92,26 +85,28 @@ import numpy as np
 import webp
 from IPython.display import clear_output
 
-class CMBnet:
-    def __init__(self, model, trloader, valoader):
+class net:
+    def __init__(self, model, trloader, valoader, teloader, batch_size):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = model.to(self.device)
         self.trloader = trloader
         self.valoader = valoader
+        self.teloader = teloader
+        self.batch_size = batch_size
 
-    
-    def train(loss_fn, optimizer, epochs, x_dim):
+    def train(self, optimizer, epochs, x_dim, lsfn):
+        loss_list, val_list = [], []
 
         for epoch in tqdm.trange(epochs):
             self.model.train()
-            for x in self.trloader:
+            for x, _ in self.trloader:
                 loss_ct = 0
-                x = x.view(-1, x_dim).to(self.device)
+                x = x.view(self.batch_size, x_dim).to(self.device)
 
                 optimizer.zero_grad()
 
                 outputs, mean, log_var = self.model(x)
-                loss = loss_fn(x, outputs, mean, log_var)
+                loss = lsfn(x, outputs, mean, log_var)
                 
                 loss.backward()
                 loss_ct += loss.item()
@@ -124,17 +119,17 @@ class CMBnet:
             with torch.no_grad():
 
                 loss_ct = 0
-                for x in self.valoader:
-                    x = x.view(-1, x_dim).to(device)
+                for x, _ in self.valoader:
+                    x = x.view(self.batch_size, x_dim).to(self.device)
                     outputs, mean, log_var = self.model(x)
 
-                    loss = loss_fn(x, outputs, mean, log_var)
+                    loss = lsfn(x, outputs, mean, log_var)
                     loss_ct += loss.item()
 
-                    # correct = (torch.argmax(outputs, dim=1).to(device) == torch.argmax(x, dim=1)).type(torch.FloatTensor)
+                    # correct = (torch.argmax(outputs, dim=1).to(self.device) == torch.argmax(x, dim=1)).type(torch.FloatTensor)
                     # val_list.append(correct.mean())
 
-                avg_loss = loss_ct / len(train_loader)
+                avg_loss = loss_ct / len(self.valoader)
                 val_list.append(avg_loss)
                 
 
@@ -145,8 +140,70 @@ class CMBnet:
 
                 ax.clear()
                 ax.plot(loss_list, label='Training Loss', linewidth = 3, color = 'blue')
-                ax.plot([i*len(train_loader) for i in range(epoch+1)], val_list, label='Validation Loss', linewidth = 3, color = 'gold')
-                ax.legend(title=f'Lowest Loss: {min(loss_list):.3f} \nAverage Loss: {np.mean(loss_list):.3f}', bbox_to_anchor=(1.25, 1))
+                ax.plot([i*len(self.trloader) for i in range(epoch+1)], val_list, label='Validation Loss', linewidth = 3, color = 'gold')
+                ax.legend(title=f'Lowest Loss: {min(loss_list):.3f} \nAverage Loss: {np.mean(loss_list):.3f}', bbox_to_anchor=(1, 1), loc='upper left')
                 ax.set_title('Training Performance')
                 ax.set_ylabel("Loss")
                 plt.show()
+
+    
+    def evaluate(self, data_loader, x_dim, threshold=0.1):
+        self.model.eval()
+        total_samples = 0
+        correct_samples = 0
+        with torch.no_grad():
+            for x, _ in data_loader:
+                x = x.view(self.batch_size, x_dim).to(self.device)
+                outputs, _, _ = self.model(x)
+                mse = nn.functional.mse_loss(outputs, x, reduction='none')
+                mse = mse.view(mse.size(0), -1).mean(dim=1)  # Mean per sample
+                total_samples += mse.size(0)
+                correct_samples += (mse < threshold).sum().item()
+        accuracy = correct_samples / total_samples
+        print(f'Evaluation Accuracy: {accuracy * 100:.2f}%')
+
+    # plot latent space
+    def plat(self, data_loader):
+        for i, (x, y) in enumerate(data_loader):
+            x = x.view(x.size(0), -1).to(self.device)
+            z, _ = self.model.encoder(x)
+            z = z.to('cpu').detach().numpy()
+            plt.scatter(z[:, 0], z[:, 1], c=y, cmap='tab10')
+            if i > self.batch_size:
+                plt.colorbar()
+                break
+    
+    # plot reconstructions
+    def prec(self, data_set, rangex=(-5, 10), rangey=(-10, 5), n=12):
+        '''
+        range in the latent space to generate:
+            rangex = range of x values
+            rangey = range of y values
+
+        n = number of images to plot
+        '''
+        w = data_set[0][0].size()[1] # image width
+        img = np.zeros((n*w, n*w))
+        for i, y in enumerate(np.linspace(*rangey, n)):
+            for j, x in enumerate(np.linspace(*rangex, n)):
+                z = torch.Tensor([[x, y]]).to(self.device)
+                x_hat = self.model.decoder(z)
+                x_hat = x_hat.reshape(28, 28).to('cpu').detach().numpy()
+                img[(n-1-i)*w:(n-1-i+1)*w, j*w:(j+1)*w] = x_hat
+        plt.imshow(img, extent=[*rangex, *rangey])
+
+        w = data_set[0][0].size()[1]  # image width
+        img = np.zeros((n*w, n*w))
+        for i, y in enumerate(np.linspace(*rangey, n)):
+            for j, x in enumerate(np.linspace(*rangex, n)):
+                # Handle higher-dimensional latent space
+                if self.model.latent_dim > 2:
+                    # Fix additional dimensions to random values, for simplicity, sampled from a standard normal distribution
+                    additional_dims = torch.randn(self.model.latent_dim - 2).to(self.device)
+                    z = torch.cat((torch.Tensor([[x, y]]).to(self.device), additional_dims.unsqueeze(0)), dim=1)
+                else:
+                    z = torch.Tensor([[x, y]]).to(self.device)
+                x_hat = self.model.decoder(z)
+                x_hat = x_hat.reshape(28, 28).to('cpu').detach().numpy()
+                img[(n-1-i)*w:(n-1-i+1)*w, j*w:(j+1)*w] = x_hat
+        plt.imshow(img, extent=[*rangex, *rangey])
