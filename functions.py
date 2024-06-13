@@ -223,7 +223,7 @@ class net:
             recon_images, _, _ = self.model(images.view(num_images, -1))
             recon_images = recon_images.view(num_images, 1, 28, 28).cpu()
 
-            fig, axes = plt.subplots(2, num_images, figsize=(15, 3))
+            fig, axes = plt.subplots(2, num_images, figsize=(15, 3), sharex=True, sharey=True)
 
             for i in range(num_images):
                 ax1 = axes[0, i]
@@ -231,11 +231,19 @@ class net:
 
                 ax1.imshow(images[i].view(28,  28).cpu(), cmap='gray')
                 if i == 0:
-                    ax1.set_ylabel("Original", weight='bold', fontsize=16)
+                    ax1.set_ylabel("Original", weight='bold', fontsize=11)
+                    ax1.set_xticks([])
+                    ax1.set_yticks([])
+                else:
+                    ax1.axis('off')
 
                 ax2.imshow(recon_images[i].view(28, 28), cmap='gray')
-                
                 if i == 0:
-                    ax2.set_ylabel("Reconstructed", weight='bold', fontsize=16)
-        
+                    ax2.set_ylabel("Reconstructed", weight='bold', fontsize=11)
+                    ax2.set_xticks([])
+                    ax2.set_yticks([])
+                else:
+                    ax2.axis('off')
+            
+            plt.tight_layout()
             plt.show()
