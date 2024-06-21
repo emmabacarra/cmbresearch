@@ -153,6 +153,7 @@ class net:
             ax.legend(title=f'Epoch {epoch}/{epochs}', bbox_to_anchor=(1, 1), loc='upper left')
             ax.set_title('Performance')
             ax.set_ylabel("Loss")
+            ax.set_xlabel("Epoch")
             plt.show()
 
 
