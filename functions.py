@@ -98,7 +98,7 @@ class net:
     def train(self, optimizer, epochs, x_dim, lsfn):
         loss_list, val_list = [], []
 
-        for epoch in tqdm.trange(epochs):
+        for epoch in tqdm.trange(1, epochs+1):
             self.model.train()
             total_train_loss = 0 # <-- per epoch, if inside loader loop it's per batch
             for x, _ in self.trloader:
@@ -139,14 +139,15 @@ class net:
                 val_list.append(avg_val_loss)
                 
             # Plot losses and validation accuracy in real-time ---------------------
+            
             fig, ax = plt.subplots(figsize=(12, 5))
             clear_output(wait=True)
 
             ax.clear()
-            ax.plot(loss_list, 
+            ax.plot(range(1, epoch+1), loss_list, 
                     label=f'Training Loss \nLowest: {min(loss_list):.3f} \nAverage: {np.mean(loss_list):.3f} \n', 
                     linewidth=3, color='blue')
-            ax.plot(range(epoch+1), val_list, 
+            ax.plot(range(1, epoch+1), val_list, 
                     label=f'Validation Loss \nLowest: {min(val_list):.3f} \nAverage: {np.mean(val_list):.3f}', 
                     linewidth=3, color='gold')
             ax.legend(title=f'Epoch {epoch}/{epochs}', bbox_to_anchor=(1, 1), loc='upper left')
@@ -163,7 +164,9 @@ class net:
         with torch.no_grad():
             for images, _ in dataloader:
                 images = images.to(self.device)
-                recon_images, _, _ = self.model(images.view(images.size(0), -1))
+                if self.linear:
+                    images = images.view(images.size(0), -1)
+                recon_images, _, _ = self.model(images)
                 recon_images = recon_images.view_as(images)
 
                 # Calculate the number of correctly reconstructed pixels
@@ -176,18 +179,26 @@ class net:
 
 
     # plot latent space
-    def plat(self, data_loader):
+    def plat(self, data_loader, latent_dims=(0, 1)):
         for i, (x, y) in enumerate(data_loader):
-            x = x.view(x.size(0), -1).to(self.device)
+            if self.linear:
+                x = x.view(x.size(0), -1)
+            x = x.to(self.device)
             z, _ = self.model.encoder(x)
             z = z.to('cpu').detach().numpy()
-            plt.scatter(z[:, 0], z[:, 1], c=y, cmap='tab10')
+            if self.model.latent_dim > 2:
+                # Select the specified dimensions for plotting
+                z_selected = z[:, latent_dims]
+            else:
+                z_selected = z
+        
+            plt.scatter(z_selected[:, 0], z_selected[:, 1], c=y, cmap='tab10')
             if i > self.batch_size:
                 plt.colorbar()
                 break
     
     # plot reconstructions
-    def prec(self, data_set, rangex=(-5, 10), rangey=(-10, 5), n=12):
+    def prec(self, data_set, rangex=(-5, 10), rangey=(-10, 5), n=12, latent_dims = (0, 1)):
         '''
         range in the latent space to generate:
             rangex = range of x values
@@ -195,30 +206,28 @@ class net:
 
         n = number of images to plot
         '''
-        w = data_set[0][0].size()[1] # image width
-        img = np.zeros((n*w, n*w))
-        for i, y in enumerate(np.linspace(*rangey, n)):
-            for j, x in enumerate(np.linspace(*rangex, n)):
-                z = torch.Tensor([[x, y]]).to(self.device)
-                x_hat = self.model.decoder(z)
-                x_hat = x_hat.reshape(28, 28).to('cpu').detach().numpy()
-                img[(n-1-i)*w:(n-1-i+1)*w, j*w:(j+1)*w] = x_hat
-        plt.imshow(img, extent=[*rangex, *rangey])
-
         w = data_set[0][0].size()[1]  # image width
         img = np.zeros((n*w, n*w))
         for i, y in enumerate(np.linspace(*rangey, n)):
             for j, x in enumerate(np.linspace(*rangex, n)):
-                # Handle higher-dimensional latent space
                 if self.model.latent_dim > 2:
-                    # Fix additional dimensions to random values, for simplicity, sampled from a standard normal distribution
-                    additional_dims = torch.randn(self.model.latent_dim - 2).to(self.device)
-                    z = torch.cat((torch.Tensor([[x, y]]).to(self.device), additional_dims.unsqueeze(0)), dim=1)
+                    # Initialize a latent vector with zeros
+                    z = torch.zeros((1, self.model.latent_dim)).to(self.device)
+                    # Set the chosen dimensions to the corresponding x, y values
+                    z[0, latent_dims[0]] = x
+                    z[0, latent_dims[1]] = y
+                    # Project other dimensions onto this plane with random values
+                    remaining_dims = [dim for dim in range(self.model.latent_dim) if dim not in latent_dims]
+                    z[0, remaining_dims] = torch.randn(len(remaining_dims)).to(self.device)
                 else:
                     z = torch.Tensor([[x, y]]).to(self.device)
+                
                 x_hat = self.model.decoder(z)
-                x_hat = x_hat.reshape(28, 28).to('cpu').detach().numpy()
+                if self.linear:
+                    x_hat = x_hat.reshape(28, 28)
+                x_hat = x_hat.to('cpu').detach().numpy()
                 img[(n-1-i)*w:(n-1-i+1)*w, j*w:(j+1)*w] = x_hat
+    
         plt.imshow(img, extent=[*rangex, *rangey])
 
     def pgen(self, dataloader, num_images=10):
@@ -227,9 +236,12 @@ class net:
             data_iter = iter(dataloader)
             images, _ = next(data_iter)
             images = images[:num_images].to(self.device)
-            
-            recon_images, _, _ = self.model(images.view(num_images, -1))
-            recon_images = recon_images.view(num_images, 1, 28, 28).cpu()
+            if self.linear:
+                 images = images.view(num_images, -1)
+            recon_images, _, _ = self.model(images)
+            if self.linear:
+                recon_images = recon_images.view(num_images, 1, 28, 28)
+            recon_images = recon_images.cpu()
 
             fig, axes = plt.subplots(2, num_images, figsize=(15, 3), sharex=True, sharey=True)
 
@@ -237,7 +249,7 @@ class net:
                 ax1 = axes[0, i]
                 ax2 = axes[1, i]
 
-                ax1.imshow(images[i].view(28,  28).cpu(), cmap='gray')
+                ax1.imshow(images[i].view(28, 28).cpu(), cmap='gray')
                 if i == 0:
                     ax1.set_ylabel("Original", weight='bold', fontsize=11)
                     ax1.set_xticks([])
