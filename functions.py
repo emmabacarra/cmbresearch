@@ -86,22 +86,26 @@ import webp
 from IPython.display import clear_output
 
 class net:
-    def __init__(self, model, trloader, valoader, teloader, batch_size):
+    def __init__(self, model, trloader, valoader, teloader, batch_size, linear=True):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = model.to(self.device)
         self.trloader = trloader
         self.valoader = valoader
         self.teloader = teloader
         self.batch_size = batch_size
+        self.linear = linear
 
     def train(self, optimizer, epochs, x_dim, lsfn):
         loss_list, val_list = [], []
 
         for epoch in tqdm.trange(epochs):
             self.model.train()
+            total_train_loss = 0 # <-- per epoch, if inside loader loop it's per batch
             for x, _ in self.trloader:
-                loss_ct = 0
-                x = x.view(self.batch_size, x_dim).to(self.device)
+
+                if self.linear:
+                    x = x.view(self.batch_size, x_dim)
+                x = x.to(self.device)
 
                 optimizer.zero_grad()
 
@@ -109,46 +113,46 @@ class net:
                 loss = lsfn(x, outputs, mean, log_var)
                 
                 loss.backward()
-                loss_ct += loss.item()
-                avg_loss = loss_ct / len(self.trloader)
-                loss_list.append(avg_loss)
                 optimizer.step()
+
+                total_train_loss += loss.item()
+            
+            avg_train_loss = total_train_loss / len(self.trloader)
+            loss_list.append(avg_train_loss)
             
             # validation accuracy -------------------------------------------------
             self.model.eval()
             with torch.no_grad():
-
-                loss_ct = 0
+                total_val_loss = 0
                 for x, _ in self.valoader:
-                    x = x.view(self.batch_size, x_dim).to(self.device)
+
+                    if self.linear:
+                        x = x.view(self.batch_size, x_dim)
+                    x = x.to(self.device)
+
                     outputs, mean, log_var = self.model(x)
 
                     loss = lsfn(x, outputs, mean, log_var)
-                    loss_ct += loss.item()
+                    total_val_loss += loss.item()
 
-                    # correct = (torch.argmax(outputs, dim=1).to(self.device) == torch.argmax(x, dim=1)).type(torch.FloatTensor)
-                    # val_list.append(correct.mean())
-
-                avg_loss = loss_ct / len(self.valoader)
-                val_list.append(avg_loss)
+                avg_val_loss = total_val_loss / len(self.valoader)
+                val_list.append(avg_val_loss)
                 
-
             # Plot losses and validation accuracy in real-time ---------------------
-            if epoch > 0:
-                fig, ax = plt.subplots(figsize=(12, 5))
-                clear_output(wait=True)
+            fig, ax = plt.subplots(figsize=(12, 5))
+            clear_output(wait=True)
 
-                ax.clear()
-                ax.plot(loss_list, 
-                        label=f'Training Loss \nLowest: {min(loss_list):.3f} \nAverage: {np.mean(loss_list):.3f} \n', 
-                        linewidth = 3, color = 'blue')
-                ax.plot([i*len(self.trloader) for i in range(epoch+1)], val_list, 
-                        label=f'Validation Loss \nLowest: {min(val_list):.3f} \nAverage: {np.mean(val_list):.3f}', 
-                        linewidth = 3, color = 'gold')
-                ax.legend(bbox_to_anchor=(1, 1), loc='upper left')
-                ax.set_title('Performance')
-                ax.set_ylabel("Loss")
-                plt.show()
+            ax.clear()
+            ax.plot(loss_list, 
+                    label=f'Training Loss \nLowest: {min(loss_list):.3f} \nAverage: {np.mean(loss_list):.3f} \n', 
+                    linewidth=3, color='blue')
+            ax.plot(range(epoch+1), val_list, 
+                    label=f'Validation Loss \nLowest: {min(val_list):.3f} \nAverage: {np.mean(val_list):.3f}', 
+                    linewidth=3, color='gold')
+            ax.legend(title=f'Epoch {epoch}/{epochs}', bbox_to_anchor=(1, 1), loc='upper left')
+            ax.set_title('Performance')
+            ax.set_ylabel("Loss")
+            plt.show()
 
 
     def evaluate(self, dataloader, threshold=0.1):
