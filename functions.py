@@ -63,7 +63,6 @@ def FitsMapper(files, hdul_index, nrows, ncols, cmap, interpolation,
 
 '''
 ------------------------------------------------------------------------------------------------------------------------------------------
-Under Construction: CMBnet class for handling data and training neural networks
 '''
 
 # pytorch functionalities
