@@ -94,67 +94,89 @@ class net:
         self.teloader = teloader
         self.batch_size = batch_size
         self.linear = linear
+        
+        self.x_dim = self.trloader.dataset[0][0].size()[1]
+        self.train_size = len(self.trloader.dataset)
 
-    def train(self, optimizer, epochs, x_dim, lsfn):
-        loss_list, val_list = [], []
+    def train(self, optimizer, lsfn, epochs, view_interval):
+        valosses = [] # <-- per epoch
+        batch_trlosses = [] # <-- per batch
+        batch_ints = self.train_size / (self.batch_size * view_interval)
 
-        for epoch in tqdm.trange(1, epochs+1):
+        for epoch in range(1, epochs+1):
+            
+            # training losses -------------------------------------------------
             self.model.train()
-            total_train_loss = 0 # <-- per epoch, if inside loader loop it's per batch
-            for x, _ in self.trloader:
+            for i, (batch, _) in enumerate(self.trloader):
 
                 if self.linear:
-                    x = x.view(self.batch_size, x_dim)
-                x = x.to(self.device)
+                    batch = batch.view(self.batch_size, self.x_dim)
+                batch = batch.to(self.device)
 
                 optimizer.zero_grad()
 
-                outputs, mean, log_var = self.model(x)
-                loss = lsfn(x, outputs, mean, log_var)
-                
-                loss.backward()
-                optimizer.step()
+                outputs, mean, log_var = self.model(batch)
+                batch_loss = lsfn(batch, outputs, mean, log_var)
 
-                total_train_loss += loss.item()
+                # Plot losses and validation accuracy in real-time ---------------------
+                if (i+1) % view_interval == 0: # <-- plot for every specified interval of batches
+                    batch_trlosses.append(batch_loss.item())
+                    
+                    fig, ax = plt.subplots(figsize=(12, 5))
+                    clear_output(wait=True)
+                    ax.clear()
+                    ax.set_title(f'Performance', weight='bold', fontsize=15)
+                    ax.plot(list(range(1, len(batch_trlosses) + 1)), batch_trlosses, 
+                            label=f'Training Loss \nLowest: {min(batch_trlosses):.3f} \nAverage: {np.mean(batch_trlosses):.3f} \n', 
+                            linewidth=3, color='blue', marker='o', markersize=3)
+                    if len(valosses) > 0:
+                        ax.plot([i*batch_ints for i in range(1, len(valosses)+1)], valosses, 
+                                label=f'Validation Loss \nLowest: {min(valosses):.3f} \nAverage: {np.mean(valosses):.3f}', 
+                                linewidth = 3, color = 'gold', marker = 'o', markersize = 3)
+                    ax.set_ylabel("Loss")
+                    ax.set_xlabel(f"Batch Intervals (per {view_interval} batches)")
+                    ax.set_xlim(1, len(batch_trlosses) + 1)
+                    ax.legend(title=f'Epoch {epoch}/{epochs}', bbox_to_anchor=(1, 1), loc='upper left')
+                    plt.show()
+                
+                batch_loss.backward()
+                optimizer.step()
             
-            avg_train_loss = total_train_loss / len(self.trloader)
-            loss_list.append(avg_train_loss)
-            
-            # validation accuracy -------------------------------------------------
+            # validation losses -------------------------------------------------
             self.model.eval()
             with torch.no_grad():
-                total_val_loss = 0
-                for x, _ in self.valoader:
+                tot_valoss = 0
+                for batch, _ in self.valoader:
 
                     if self.linear:
-                        x = x.view(self.batch_size, x_dim)
-                    x = x.to(self.device)
+                        batch = batch.view(self.batch_size, self.x_dim)
+                    batch = batch.to(self.device)
 
-                    outputs, mean, log_var = self.model(x)
+                    outputs, mean, log_var = self.model(batch)
+                    batch_loss = lsfn(batch, outputs, mean, log_var)
 
-                    loss = lsfn(x, outputs, mean, log_var)
-                    total_val_loss += loss.item()
+                    tot_valoss += batch_loss.item()
 
-                avg_val_loss = total_val_loss / len(self.valoader)
-                val_list.append(avg_val_loss)
-                
-            # Plot losses and validation accuracy in real-time ---------------------
-            
-            fig, ax = plt.subplots(figsize=(12, 5))
-            clear_output(wait=True)
-
-            ax.clear()
-            ax.plot(range(1, epoch+1), loss_list, 
-                    label=f'Training Loss \nLowest: {min(loss_list):.3f} \nAverage: {np.mean(loss_list):.3f} \n', 
-                    linewidth=3, color='blue')
-            ax.plot(range(1, epoch+1), val_list, 
-                    label=f'Validation Loss \nLowest: {min(val_list):.3f} \nAverage: {np.mean(val_list):.3f}', 
-                    linewidth=3, color='gold')
-            ax.legend(title=f'Epoch {epoch}/{epochs}', bbox_to_anchor=(1, 1), loc='upper left')
-            ax.set_title('Performance')
-            ax.set_ylabel("Loss")
-            ax.set_xlabel("Epoch")
-            plt.show()
+                avg_val_loss = tot_valoss / len(self.valoader)
+                valosses.append(avg_val_loss)
+    
+        # final plot to account for all tracked losses in an epoch
+        fig, ax = plt.subplots(figsize=(12, 5))
+        clear_output(wait=True)
+        ax.clear()
+        ax.set_title(f'Performance', weight='bold', fontsize=15)
+        ax.plot(list(range(1, len(batch_trlosses) + 1)), batch_trlosses, 
+                label=f'Training Loss \nLowest: {min(batch_trlosses):.3f} \nAverage: {np.mean(batch_trlosses):.3f} \n', 
+                linewidth=3, color='blue', marker='o', markersize=3)
+        if len(valosses) > 0:
+            ax.plot([i*batch_ints for i in range(1, len(valosses)+1)], valosses, 
+                    label=f'Validation Loss \nLowest: {min(valosses):.3f} \nAverage: {np.mean(valosses):.3f}', 
+                    linewidth = 3, color = 'gold', marker = 'o', markersize = 3)
+        ax.set_ylabel("Loss")
+        ax.set_xlabel(f"Batch Intervals (per {view_interval} batches)")
+        ax.set_xlim(1, len(batch_trlosses) + 1)
+        ax.legend(title=f'Epoch {epochs}/{epochs}', bbox_to_anchor=(1, 1), loc='upper left')
+        plt.show()
 
 
     def evaluate(self, dataloader, threshold=0.1):
