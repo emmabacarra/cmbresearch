@@ -97,7 +97,7 @@ class net:
         self.x_dim = self.trloader.dataset[0][0].size()[1]
         self.train_size = len(self.trloader.dataset)
 
-    def train(self, optimizer, lsfn, epochs, view_interval):
+    def train(self, optimizer, lsfn, epochs, view_interval, averaging=True):
         valosses = [] # <-- per epoch
         batch_trlosses = [] # <-- per batch
         batch_ints = self.train_size / (self.batch_size * view_interval)
@@ -106,8 +106,10 @@ class net:
             
             # training losses -------------------------------------------------
             self.model.train()
+            loss_ct, counter = 0, 0
             for i, (batch, _) in enumerate(self.trloader):
-
+                counter += 1
+                
                 if self.linear:
                     batch = batch.view(self.batch_size, self.x_dim)
                 batch = batch.to(self.device)
@@ -116,15 +118,21 @@ class net:
 
                 outputs, mean, log_var = self.model(batch)
                 batch_loss = lsfn(batch, outputs, mean, log_var)
+                loss_ct += batch_loss.item()
 
                 # Plot losses and validation accuracy in real-time ---------------------
                 if (i+1) % view_interval == 0: # <-- plot for every specified interval of batches
-                    batch_trlosses.append(batch_loss.item())
+                    avg_loss = loss_ct / counter
+                    if averaging:
+                        batch_trlosses.append(avg_loss) # <-- average loss of the interval
+                    else:
+                        batch_trlosses.append(batch_loss.item())
+                    loss_ct, counter = 0, 0 # reset for next interval
                     
                     fig, ax = plt.subplots(figsize=(12, 5))
                     clear_output(wait=True)
                     ax.clear()
-                    ax.set_title(f'Performance', weight='bold', fontsize=15)
+                    ax.set_title(f'Performance (Epoch {epoch}/{epochs})', weight='bold', fontsize=15)
                     ax.plot(list(range(1, len(batch_trlosses) + 1)), batch_trlosses, 
                             label=f'Training Loss \nLowest: {min(batch_trlosses):.3f} \nAverage: {np.mean(batch_trlosses):.3f} \n', 
                             linewidth=3, color='blue', marker='o', markersize=3)
@@ -135,7 +143,7 @@ class net:
                     ax.set_ylabel("Loss")
                     ax.set_xlabel(f"Batch Intervals (per {view_interval} batches)")
                     ax.set_xlim(1, len(batch_trlosses) + 1)
-                    ax.legend(title=f'Epoch {epoch}/{epochs}', bbox_to_anchor=(1, 1), loc='upper left')
+                    ax.legend(bbox_to_anchor=(1, 1), loc='upper left')
                     plt.show()
                 
                 batch_loss.backward()
@@ -163,7 +171,7 @@ class net:
         fig, ax = plt.subplots(figsize=(12, 5))
         clear_output(wait=True)
         ax.clear()
-        ax.set_title(f'Performance', weight='bold', fontsize=15)
+        ax.set_title(f'Performance (Epoch {epochs}/{epochs})', weight='bold', fontsize=15)
         ax.plot(list(range(1, len(batch_trlosses) + 1)), batch_trlosses, 
                 label=f'Training Loss \nLowest: {min(batch_trlosses):.3f} \nAverage: {np.mean(batch_trlosses):.3f} \n', 
                 linewidth=3, color='blue', marker='o', markersize=3)
@@ -174,7 +182,7 @@ class net:
         ax.set_ylabel("Loss")
         ax.set_xlabel(f"Batch Intervals (per {view_interval} batches)")
         ax.set_xlim(1, len(batch_trlosses) + 1)
-        ax.legend(title=f'Epoch {epochs}/{epochs}', bbox_to_anchor=(1, 1), loc='upper left')
+        ax.legend(bbox_to_anchor=(1, 1), loc='upper left')
         plt.show()
 
 
