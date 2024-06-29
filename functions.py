@@ -94,13 +94,14 @@ class net:
         self.batch_size = batch_size
         self.linear = linear
         
-        self.x_dim = self.trloader.dataset[0][0].size()[1]
+        self.x_dim = self.trloader.dataset[0][0].size()[1]*self.trloader.dataset[0][0].size()[2]
         self.train_size = len(self.trloader.dataset)
 
     def train(self, optimizer, lsfn, epochs, view_interval, averaging=True):
         valosses = [] # <-- per epoch
         batch_trlosses = [] # <-- per batch
         batch_ints = self.train_size / (self.batch_size * view_interval)
+        absolute_loss = 0
 
         for epoch in range(1, epochs+1):
             
@@ -119,9 +120,10 @@ class net:
                 outputs, mean, log_var = self.model(batch)
                 batch_loss = lsfn(batch, outputs, mean, log_var)
                 loss_ct += batch_loss.item()
+                absolute_loss += batch_loss.item()
 
                 # Plot losses and validation accuracy in real-time ---------------------
-                if (i+1) % view_interval == 0: # <-- plot for every specified interval of batches
+                if (i+1) % view_interval == 0 or i == len(self.trloader) - 1: # <-- plot for every specified interval of batches (and also account for the last batch)
                     avg_loss = loss_ct / counter
                     if averaging:
                         batch_trlosses.append(avg_loss) # <-- average loss of the interval
@@ -143,7 +145,7 @@ class net:
                     ax.set_ylabel("Loss")
                     ax.set_xlabel(f"Batch Intervals (per {view_interval} batches)")
                     ax.set_xlim(1, len(batch_trlosses) + 1)
-                    ax.legend(bbox_to_anchor=(1, 1), loc='upper left')
+                    ax.legend(title = f'Absolute loss: {round(absolute_loss, 3)}', bbox_to_anchor=(1, 1), loc='upper left')
                     plt.show()
                 
                 batch_loss.backward()
@@ -182,8 +184,10 @@ class net:
         ax.set_ylabel("Loss")
         ax.set_xlabel(f"Batch Intervals (per {view_interval} batches)")
         ax.set_xlim(1, len(batch_trlosses) + 1)
-        ax.legend(bbox_to_anchor=(1, 1), loc='upper left')
+        ax.legend(title = f'Absolute loss: {round(absolute_loss, 3)}', bbox_to_anchor=(1, 1), loc='upper left')
         plt.show()
+
+        return absolute_loss
 
 
     def evaluate(self, dataloader, threshold=0.1):
@@ -223,9 +227,13 @@ class net:
                 z_selected = z
         
             plt.scatter(z_selected[:, 0], z_selected[:, 1], c=y, cmap='tab10')
+            plt.title(f"2D Latent Space", fontsize = 15, fontweight = 'bold')
+            plt.xlabel(f"Dimension {latent_dims[0]}", fontsize = 12)
+            plt.ylabel(f"Dimension {latent_dims[1]}", fontsize = 12)
             if i > self.batch_size:
                 plt.colorbar()
                 break
+            plt.tight_layout()
     
     # plot reconstructions
     def prec(self, data_set, rangex=(-5, 10), rangey=(-10, 5), n=12, latent_dims = (0, 1)):
@@ -257,8 +265,11 @@ class net:
                     x_hat = x_hat.reshape(28, 28)
                 x_hat = x_hat.to('cpu').detach().numpy()
                 img[(n-1-i)*w:(n-1-i+1)*w, j*w:(j+1)*w] = x_hat
-    
+        plt.title(f"Latent Space Images", fontsize = 15, fontweight = 'bold')
+        plt.xlabel(f"Dimension {latent_dims[0]}", fontsize = 12)
+        plt.ylabel(f"Dimension {latent_dims[1]}", fontsize = 12)
         plt.imshow(img, extent=[*rangex, *rangey])
+        plt.tight_layout()
 
     def pgen(self, dataloader, num_images=10):
         self.model.eval()
