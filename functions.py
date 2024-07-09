@@ -99,8 +99,6 @@ class net:
         self.train_size = len(self.trloader.dataset)
 
     def train(self, optimizer, lsfn, epochs, view_interval, averaging=True):
-        self.learning_rate = optimizer.param_groups[0]['lr']
-
         logger = []
         valosses = [] # <-- per epoch
         batch_trlosses = [] # <-- per batch
@@ -127,7 +125,12 @@ class net:
                 batch_loss = lsfn(batch, outputs, mean, log_var)
                 loss_ct += batch_loss.item()
                 absolute_loss += batch_loss.item()
-                logger.append((time.time() - batch_start, epoch, i, batch_loss.item(), time.time() - start_time))
+
+                timestamp = time.strftime('%m/%d/%y %H:%M:%S', time.localtime())
+                batch_time = time.time() - batch_start
+                elapsed_time = time.time() - start_time
+                learning_rate = optimizer.param_groups[0]['lr']
+                logger.append((timestamp, elapsed_time, learning_rate, batch_time, epoch, i, batch_loss.item()))
 
                 # Plot losses and validation accuracy in real-time ---------------------
                 if (i+1) % view_interval == 0 or i == len(self.trloader) - 1: # <-- plot for every specified interval of batches (and also account for the last batch)
@@ -175,7 +178,12 @@ class net:
 
                 avg_val_loss = tot_valoss / len(self.valoader)
                 valosses.append(avg_val_loss)
-                logger.append((f"[VALIDATION (Epoch {epoch}/{epochs})]", time.time() - start_time, avg_val_loss))
+                
+                timestamp = time.strftime('%m/%d/%y %H:%M:%S', time.localtime())
+                elapsed_time = time.time() - start_time
+                learning_rate = optimizer.param_groups[0]['lr']
+                logger.append((timestamp, elapsed_time, learning_rate, f"[VALIDATION (Epoch {epoch}/{epochs})]", avg_val_loss))
+
         end_time = time.time()
         
         # final plot to account for all tracked losses in an epoch
@@ -196,17 +204,20 @@ class net:
         ax.legend(title = f'Absolute loss: {round(absolute_loss, 3)}', bbox_to_anchor=(1, 1), loc='upper right')
         plt.show()
 
+        # for reference:
+        # logger.append((timestamp, elapsed_time, learning_rate, batch_time, epoch, i, batch_loss.item()))
+        # logger.append((timestamp, elapsed_time, learning_rate, f"[VALIDATION (Epoch {epoch}/{epochs})]", avg_val_loss))
         for log in logger:
-            if isinstance(log[0], str): # for validation logs
-                print(f"----------- {log[0]} | Time: {log[1]:.2f} | Loss: {log[2]} -----------")
+            if isinstance(log[3], str): # for validation logs
+                print(f"[{log[0]}] ({log[1]:.2f}) ----------- {log[3]} | Learning Rate: {log[2]} | Loss: {log[4]} -----------")
             else:
-                print(f'Time: {log[4]:.2f} | Epoch: {log[1]} | Batch: {log[2]} | Loss: {log[3]}')
+                print(f'[{log[0]}] ({log[1]:.2f}) | Epoch: {log[4]} | Batch: {log[5]} | Learning Rate: {log[2]} | Loss: {log[6]}')
         
         minutes, seconds = divmod(end_time - start_time, 60)
         print('===========================================================================================',
             '\n===========================================================================================',
-            f'\nLearning Rate: {self.learning_rate} | Absolute Loss: {absolute_loss:.3f}',
-            f'\nTotal Training Time: {int(minutes):02d}m {int(seconds):02d}s | Average Batch Time: {np.mean([log[0] for log in logger if isinstance(log[0], float)]):.3f}s')
+            f'\nAbsolute Loss: {absolute_loss:.3f}',
+            f'\nTotal Training Time: {int(minutes):02d}m {int(seconds):02d}s | Average Batch Time: {np.mean([log[3] for log in logger if isinstance(log[3], float)]):.3f}s')
 
         return absolute_loss
 
