@@ -98,6 +98,7 @@ class net:
         self.train_size = len(self.trloader.dataset)
 
     def train(self, optimizer, lsfn, epochs, view_interval, averaging=True):
+        logger = []
         valosses = [] # <-- per epoch
         batch_trlosses = [] # <-- per batch
         batch_ints = self.train_size / (self.batch_size * view_interval)
@@ -121,6 +122,7 @@ class net:
                 batch_loss = lsfn(batch, outputs, mean, log_var)
                 loss_ct += batch_loss.item()
                 absolute_loss += batch_loss.item()
+                logger.append((epoch, i, batch_loss.item()))
 
                 # Plot losses and validation accuracy in real-time ---------------------
                 if (i+1) % view_interval == 0 or i == len(self.trloader) - 1: # <-- plot for every specified interval of batches (and also account for the last batch)
@@ -186,6 +188,9 @@ class net:
         ax.set_xlim(1, len(batch_trlosses) + 1)
         ax.legend(title = f'Absolute loss: {round(absolute_loss, 3)}', bbox_to_anchor=(1, 1), loc='upper left')
         plt.show()
+
+        for log in logger:
+            print(f'Epoch: {log[0]} | Batch: {log[1]} | Loss: {log[2]}')
 
         return absolute_loss
 
