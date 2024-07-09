@@ -77,6 +77,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from mpl_toolkits.axes_grid1 import ImageGrid
 from torchvision.utils import save_image, make_grid
+import time
 
 # others
 import tqdm
@@ -98,18 +99,22 @@ class net:
         self.train_size = len(self.trloader.dataset)
 
     def train(self, optimizer, lsfn, epochs, view_interval, averaging=True):
+        self.learning_rate = optimizer.param_groups[0]['lr']
+
         logger = []
         valosses = [] # <-- per epoch
         batch_trlosses = [] # <-- per batch
         batch_ints = self.train_size / (self.batch_size * view_interval)
         absolute_loss = 0
 
+        start_time = time.time()
         for epoch in range(1, epochs+1):
             
             # training losses -------------------------------------------------
             self.model.train()
             loss_ct, counter = 0, 0
             for i, (batch, _) in enumerate(self.trloader):
+                batch_start = time.time()
                 counter += 1
                 
                 if self.linear:
@@ -122,7 +127,7 @@ class net:
                 batch_loss = lsfn(batch, outputs, mean, log_var)
                 loss_ct += batch_loss.item()
                 absolute_loss += batch_loss.item()
-                logger.append((epoch, i, batch_loss.item()))
+                logger.append((time.time() - batch_start, epoch, i, batch_loss.item(), time.time() - start_time))
 
                 # Plot losses and validation accuracy in real-time ---------------------
                 if (i+1) % view_interval == 0 or i == len(self.trloader) - 1: # <-- plot for every specified interval of batches (and also account for the last batch)
@@ -147,7 +152,7 @@ class net:
                     ax.set_ylabel("Loss")
                     ax.set_xlabel(f"Batch Intervals (per {view_interval} batches)")
                     ax.set_xlim(1, len(batch_trlosses) + 1)
-                    ax.legend(title = f'Absolute loss: {round(absolute_loss, 3)}', bbox_to_anchor=(1, 1), loc='upper left')
+                    ax.legend(title = f'Absolute loss: {round(absolute_loss, 3)}', bbox_to_anchor=(1, 1), loc='upper right')
                     plt.show()
                 
                 batch_loss.backward()
@@ -170,7 +175,9 @@ class net:
 
                 avg_val_loss = tot_valoss / len(self.valoader)
                 valosses.append(avg_val_loss)
-    
+                logger.append((f"[VALIDATION (Epoch {epoch}/{epochs})]", time.time() - start_time, avg_val_loss))
+        end_time = time.time()
+        
         # final plot to account for all tracked losses in an epoch
         fig, ax = plt.subplots(figsize=(12, 5))
         clear_output(wait=True)
@@ -186,11 +193,20 @@ class net:
         ax.set_ylabel("Loss")
         ax.set_xlabel(f"Batch Intervals (per {view_interval} batches)")
         ax.set_xlim(1, len(batch_trlosses) + 1)
-        ax.legend(title = f'Absolute loss: {round(absolute_loss, 3)}', bbox_to_anchor=(1, 1), loc='upper left')
+        ax.legend(title = f'Absolute loss: {round(absolute_loss, 3)}', bbox_to_anchor=(1, 1), loc='upper right')
         plt.show()
 
         for log in logger:
-            print(f'Epoch: {log[0]} | Batch: {log[1]} | Loss: {log[2]}')
+            if isinstance(log[0], str): # for validation logs
+                print(f"----------- {log[0]} | Time: {log[1]:.2f} | Loss: {log[2]} -----------")
+            else:
+                print(f'Time: {log[4]:.2f} | Epoch: {log[1]} | Batch: {log[2]} | Loss: {log[3]}')
+        
+        minutes, seconds = divmod(end_time - start_time, 60)
+        print('===========================================================================================',
+            '\n===========================================================================================',
+            f'\nLearning Rate: {self.learning_rate} | Absolute Loss: {absolute_loss:.3f}',
+            f'\nTotal Training Time: {int(minutes):02d}m {int(seconds):02d}s | Average Batch Time: {np.mean([log[0] for log in logger if isinstance(log[0], float)]):.3f}s')
 
         return absolute_loss
 
