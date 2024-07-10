@@ -98,7 +98,7 @@ class net:
         self.x_dim = self.trloader.dataset[0][0].size()[1]*self.trloader.dataset[0][0].size()[2]
         self.train_size = len(self.trloader.dataset)
 
-    def train(self, optimizer, lsfn, epochs, view_interval, averaging=True):
+    def train(self, optimizer, lsfn, epochs, view_interval, kl_weight, averaging=True):
         logger = []
         valosses = [] # <-- per epoch
         batch_trlosses = [] # <-- per batch
@@ -122,7 +122,7 @@ class net:
                 optimizer.zero_grad()
 
                 outputs, mean, log_var = self.model(batch)
-                batch_loss = lsfn(batch, outputs, mean, log_var)
+                batch_loss = lsfn(batch, outputs, mean, log_var, kl_weight)
                 loss_ct += batch_loss.item()
                 absolute_loss += batch_loss.item()
 
@@ -130,7 +130,7 @@ class net:
                 batch_time = time.time() - batch_start
                 elapsed_time = time.time() - start_time
                 learning_rate = optimizer.param_groups[0]['lr']
-                logger.append((timestamp, elapsed_time, learning_rate, batch_time, epoch, i, batch_loss.item()))
+                logger.append((timestamp, elapsed_time, learning_rate, batch_time, epoch, i, kl_weight, batch_loss.item()))
 
                 # Plot losses and validation accuracy in real-time ---------------------
                 if (i+1) % view_interval == 0 or i == len(self.trloader) - 1: # <-- plot for every specified interval of batches (and also account for the last batch)
@@ -172,7 +172,7 @@ class net:
                     batch = batch.to(self.device)
 
                     outputs, mean, log_var = self.model(batch)
-                    batch_loss = lsfn(batch, outputs, mean, log_var)
+                    batch_loss = lsfn(batch, outputs, mean, log_var, kl_weight)
 
                     tot_valoss += batch_loss.item()
 
@@ -182,7 +182,7 @@ class net:
                 timestamp = time.strftime('%m/%d/%y %H:%M:%S', time.localtime())
                 elapsed_time = time.time() - start_time
                 learning_rate = optimizer.param_groups[0]['lr']
-                logger.append((timestamp, elapsed_time, learning_rate, f"[VALIDATION (Epoch {epoch}/{epochs})]", avg_val_loss))
+                logger.append((timestamp, elapsed_time, learning_rate, f"[VALIDATION (Epoch {epoch}/{epochs})]", kl_weight, avg_val_loss))
 
         end_time = time.time()
         
@@ -205,13 +205,13 @@ class net:
         plt.show()
 
         # for reference:
-        # logger.append((timestamp, elapsed_time, learning_rate, batch_time, epoch, i, batch_loss.item()))
-        # logger.append((timestamp, elapsed_time, learning_rate, f"[VALIDATION (Epoch {epoch}/{epochs})]", avg_val_loss))
+        # logger.append((timestamp, elapsed_time, learning_rate, batch_time, epoch, i, kl_weight, batch_loss.item()))
+        # logger.append((timestamp, elapsed_time, learning_rate, f"[VALIDATION (Epoch {epoch}/{epochs})]", kl_weight, avg_val_loss))
         for log in logger:
             if isinstance(log[3], str): # for validation logs
-                print(f"[{log[0]}] ({log[1]:.2f}) ----------- {log[3]} | Learning Rate: {log[2]} | Loss: {log[4]} -----------")
+                print(f"[{log[0]}] ({log[1]:.2f}) ----------- {log[3]} | Learning Rate: {log[2]} | KL Weight: {log[4]} | Loss: {log[5]} -----------")
             else:
-                print(f'[{log[0]}] ({log[1]:.2f}) | Epoch: {log[4]} | Batch: {log[5]} | Learning Rate: {log[2]} | Loss: {log[6]}')
+                print(f'[{log[0]}] ({log[1]:.2f}) | Epoch: {log[4]} | Batch: {log[5]} | Learning Rate: {log[2]} | KL Weight: {log[6]} | Loss: {log[7]}')
         
         minutes, seconds = divmod(end_time - start_time, 60)
         print('===========================================================================================',
