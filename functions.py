@@ -156,7 +156,7 @@ class net:
                     ax.set_xlabel(f"Batch Intervals (per {view_interval} batches)")
                     ax.set_xlim(1, len(batch_trlosses) + 1)
                     ax.legend(title = f'Absolute loss: {round(absolute_loss, 3)}', bbox_to_anchor=(1, 1), loc='upper right')
-                    plt.show()
+                    plt.show(block=False)
                 
                 batch_loss.backward()
                 optimizer.step()
@@ -202,7 +202,7 @@ class net:
         ax.set_xlabel(f"Batch Intervals (per {view_interval} batches)")
         ax.set_xlim(1, len(batch_trlosses) + 1)
         ax.legend(title = f'Absolute loss: {round(absolute_loss, 3)}', bbox_to_anchor=(1, 1), loc='upper right')
-        plt.show()
+        plt.show(block=False)
 
         # for reference:
         # logger.append((timestamp, elapsed_time, learning_rate, batch_time, epoch, i, kl_weight, batch_loss.item()))
