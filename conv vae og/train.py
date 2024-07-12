@@ -1,4 +1,3 @@
-'''importing packages & necessary functions'''
 import os
 import sys
 
@@ -32,12 +31,6 @@ from functions import net
 
 # gpu
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
-'''
-======================================================================================================================================
-'''
-
 
 # create a transofrm to apply to each datapoint
 transform = transforms.Compose([transforms.ToTensor()])
@@ -82,7 +75,7 @@ model = ConvVAE(
             init_channels=8, 
             kernel_size=14,
             padding=12,
-            latent_dim=16, 
+            latent_dim=32, 
             leak=0.99, drop=0.01,
             stochastic=True
         ).to(device)
@@ -90,25 +83,5 @@ nnet = net(model, train_loader, val_loader, test_loader, batch_size, linear=Fals
 
 optimizer = Adam(model.parameters(), lr=0.001, weight_decay=1e-10);
 
-nnet.train(optimizer=optimizer, lsfn=loss_function, epochs=15, view_interval=100, kl_weight=0.1, averaging=True)
-
-
-'''
-======================================================================================================================================
-'''
-
+nnet.train(optimizer=optimizer, lsfn=loss_function, epochs=5, kl_weight=1, headless=True)
 nnet.evaluate(test_loader)
-
-latent_dims = (0, 1)
-
-plt.figure(figsize = (10, 5))
-
-plt.subplot(1, 2, 1)
-nnet.plat(test_loader, latent_dims) 
-sns.despine()
-
-plt.subplot(1, 2, 2)
-nnet.prec(test_dataset, n=15, rangex=(-5, 5), rangey=(-5, 5), latent_dims=latent_dims)
-sns.despine()
-
-nnet.pgen(test_loader, num_images=10)
