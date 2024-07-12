@@ -233,7 +233,7 @@ class net:
         savelog = [("Timestamp", "Elapsed Time", "Learning Rate", "Batch Time", "Epoch", "Batch No.", "KL Weight", "Loss"),
                   ("If Validation, then: " "Timestamp", "Elapsed Time", "Learning Rate", "Epoch", "KL Weight", "Averaged Loss")]
         savelog.extend(logger)
-        with open(f"./Training Logs/{timestamp.replace('/', '-').replace(':', '.')}.txt", "w") as file:
+        with open(f"./Training Logs/{timestamp.replace('/', '-').replace(':', '.').replace(' ', '__')}.txt", "w") as file:
             for log in savelog:
                 entry = ', '.join(map(str, log))
                 file.write(entry + '\n')
