@@ -83,5 +83,20 @@ nnet = net(model, train_loader, val_loader, test_loader, batch_size, linear=Fals
 
 optimizer = Adam(model.parameters(), lr=0.001, weight_decay=1e-10);
 
-nnet.train(optimizer=optimizer, lsfn=loss_function, epochs=5, kl_weight=1, headless=True)
+nnet.train(optimizer=optimizer, lsfn=loss_function, epochs=5, kl_weight=1, live_plot=False)
 nnet.evaluate(test_loader)
+
+latent_dims = (0, 1)
+print(f"Selected latent dimensions: {latent_dims}")
+
+plt.figure(figsize = (10, 5))
+
+plt.subplot(1, 2, 1)
+nnet.plat(test_loader, latent_dims) 
+sns.despine()
+
+plt.subplot(1, 2, 2)
+nnet.prec(test_dataset, n=15, rangex=(-5, 5), rangey=(-5, 5), latent_dims=latent_dims)
+sns.despine()
+
+nnet.pgen(test_loader, num_images=10)

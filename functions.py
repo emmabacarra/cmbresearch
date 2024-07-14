@@ -98,7 +98,7 @@ class net:
         self.x_dim = self.trloader.dataset[0][0].size()[1]*self.trloader.dataset[0][0].size()[2]
         self.train_size = len(self.trloader.dataset)
 
-    def train(self, optimizer, lsfn, epochs, kl_weight, headless=False, view_interval=100, averaging=True):
+    def train(self, optimizer, lsfn, epochs, kl_weight, live_plot=False, view_interval=100, averaging=True):
         logger = []
         valosses = [] # <-- per epoch
         batch_trlosses = [] # <-- per batch
@@ -126,22 +126,25 @@ class net:
                 loss_ct += batch_loss.item()
                 absolute_loss += batch_loss.item()
 
-                timestamp = time.strftime('%m/%d/%y %H:%M:%S', time.localtime())
+                self.timestamp = time.strftime('%m/%d/%y %H:%M:%S', time.localtime())
                 batch_time = time.time() - batch_start
                 elapsed_time = time.time() - start_time
                 learning_rate = optimizer.param_groups[0]['lr']
-                logger.append((timestamp, elapsed_time, learning_rate, batch_time, epoch, i, kl_weight, batch_loss.item()))
+                
+                batch_log = f'[{self.timestamp}] ({elapsed_time:.2f}s) | Epoch: {epoch} | Batch: {i} ({batch_time:.3f}s) | LR: {learning_rate} | KL Weight: {kl_weight} | Loss: {batch_loss.item()}'
+                logger.append((batch_log, batch_time))
+                print(batch_log)
 
-                if not headless: # i.e. when headless is false
-                    # Plot losses and validation accuracy in real-time ---------------------
-                    if (i+1) % view_interval == 0 or i == len(self.trloader) - 1: # <-- plot for every specified interval of batches (and also account for the last batch)
-                        avg_loss = loss_ct / counter
-                        if averaging:
-                            batch_trlosses.append(avg_loss) # <-- average loss of the interval
-                        else:
-                            batch_trlosses.append(batch_loss.item())
-                        loss_ct, counter = 0, 0 # reset for next interval
-                        
+                # -------------------------------------------------------------------------------
+                if (i+1) % view_interval == 0 or i == len(self.trloader) - 1: # <-- plot for every specified interval of batches (and also account for the last batch)
+                    avg_loss = loss_ct / counter
+                    if averaging:
+                        batch_trlosses.append(avg_loss) # <-- average loss of the interval
+                    else:
+                        batch_trlosses.append(batch_loss.item())
+                    loss_ct, counter = 0, 0 # reset for next interval
+                
+                    if live_plot: # Plot losses and validation accuracy in real-time 
                         fig, ax = plt.subplots(figsize=(12, 5))
                         clear_output(wait=True)
                         ax.clear()
@@ -160,9 +163,7 @@ class net:
                         ax.legend(title = f'Absolute loss: {round(absolute_loss, 3)}', bbox_to_anchor=(1, 1), loc='upper right')
 
                         plt.show(block=False)
-                else: # -------------------------------------------------------------------------------
-                    print(f'[{timestamp}] ({elapsed_time:.2f}s) | Epoch: {epoch} | Batch: {i} ({batch_time:.3f}s) | LR: {learning_rate} | KL Weight: {kl_weight} | Loss: {batch_loss.item()}')
-                
+                # -------------------------------------------------------------------------------
                 batch_loss.backward()
                 optimizer.step()
             
@@ -184,59 +185,55 @@ class net:
                 avg_val_loss = tot_valoss / len(self.valoader)
                 valosses.append(avg_val_loss)
                 
-                timestamp = time.strftime('%m/%d/%y %H:%M:%S', time.localtime())
+                self.timestamp = time.strftime('%m/%d/%y %H:%M:%S', time.localtime())
                 elapsed_time = time.time() - start_time
                 learning_rate = optimizer.param_groups[0]['lr']
-                logger.append((timestamp, elapsed_time, learning_rate, f"[VALIDATION (Epoch {epoch}/{epochs})]", kl_weight, avg_val_loss))
-
-                if headless:
-                    print(f'[{timestamp}] ({elapsed_time:.2f}s)  VALIDATION (Epoch {epoch}/{epochs}) | LR: {learning_rate} | KL Weight: {kl_weight} | Loss: {avg_val_loss} -----------')
+                
+                val_log = f'[{self.timestamp}] ({elapsed_time:.2f}s)  VALIDATION (Epoch {epoch}/{epochs}) | LR: {learning_rate} | KL Weight: {kl_weight} | Loss: {avg_val_loss} -----------'
+                logger.append((val_log, None))
+                print(val_log)
 
         end_time = time.time()
         
-        if not headless:
-            # final plot to account for all tracked losses in an epoch =========================
-            fig, ax = plt.subplots(figsize=(12, 5))
-            clear_output(wait=True)
-            ax.clear()
+        self.timestamp = self.timestamp.replace('/', '-').replace(':', '.').replace(' ', '__')
+        # -------------------------------------------------------------------------------
+        # final plot to account for all tracked losses in an epoch =========================
+        fig, ax = plt.subplots(figsize=(12, 5))
+        clear_output(wait=True)
+        ax.clear()
 
-            ax.set_title(f'Performance (Epoch {epochs}/{epochs})', weight='bold', fontsize=15)
-            ax.plot(list(range(1, len(batch_trlosses) + 1)), batch_trlosses, 
-                    label=f'Training Loss \nLowest: {min(batch_trlosses):.3f} \nAverage: {np.mean(batch_trlosses):.3f} \n', 
-                    linewidth=3, color='blue', marker='o', markersize=3)
-            if len(valosses) > 0:
-                ax.plot([i*batch_ints for i in range(1, len(valosses)+1)], valosses, 
-                        label=f'Validation Loss \nLowest: {min(valosses):.3f} \nAverage: {np.mean(valosses):.3f}', 
-                        linewidth = 3, color = 'gold', marker = 'o', markersize = 3)
-            ax.set_ylabel("Loss")
-            ax.set_xlabel(f"Batch Intervals (per {view_interval} batches)")
-            ax.set_xlim(1, len(batch_trlosses) + 1)
-            ax.legend(title = f'Absolute loss: {round(absolute_loss, 3)}', bbox_to_anchor=(1, 1), loc='upper right')
+        ax.set_title(f'Performance (Epoch {epochs}/{epochs})', weight='bold', fontsize=15)
+        ax.plot(list(range(1, len(batch_trlosses) + 1)), batch_trlosses, 
+                label=f'Training Loss \nLowest: {min(batch_trlosses):.3f} \nAverage: {np.mean(batch_trlosses):.3f} \n', 
+                linewidth=3, color='blue', marker='o', markersize=3)
+        if len(valosses) > 0:
+            ax.plot([i*batch_ints for i in range(1, len(valosses)+1)], valosses, 
+                    label=f'Validation Loss \nLowest: {min(valosses):.3f} \nAverage: {np.mean(valosses):.3f}', 
+                    linewidth = 3, color = 'gold', marker = 'o', markersize = 3)
+        ax.set_ylabel("Loss")
+        ax.set_xlabel(f"Batch Intervals (per {view_interval} batches)")
+        ax.set_xlim(1, len(batch_trlosses) + 1)
+        ax.legend(title = f'Absolute loss: {round(absolute_loss, 3)}', bbox_to_anchor=(1, 1), loc='upper right')
 
-            plt.show(block=False)
-
-            # for reference:
-            # logger.append((timestamp, elapsed_time, learning_rate, batch_time, epoch, i, kl_weight, batch_loss.item()))
-            # logger.append((timestamp, elapsed_time, learning_rate, f"[VALIDATION (Epoch {epoch}/{epochs})]", kl_weight, avg_val_loss))
-            for log in logger:
-                if isinstance(log[3], str): # for validation logs
-                    print(f"[{log[0]}] ({log[1]:.2f}) ----------- {log[3]} | LR: {log[2]} | KL Weight: {log[4]} | Loss: {log[5]} -----------")
-                else:
-                    print(f'[{log[0]}] ({log[1]:.2f}) | Epoch: {log[4]} | Batch: {log[5]} ({log[3]:.3f}s) | LR: {log[2]} | KL Weight: {log[6]} | Loss: {log[7]}')
+        plt.show(block=False)
+        plt.savefig(f"./Loss Plots/{self.timestamp}.png", bbox_inches='tight')
+        # -------------------------------------------------------------------------------
+        params = [("Model Parameters: ", tuple(self.model.params().items())),
+                   ("Encoder Parameters: ", tuple(self.model.encoder.params().items())),
+                   ("Decoder Parameters: ", tuple(self.model.decoder.params().items()))]
             
         minutes, seconds = divmod(end_time - start_time, 60)
         print('===========================================================================================',
             '\n===========================================================================================',
+            "\n", params[0], "\n", params[1], "\n", params[2], "\n",
             f'\nAbsolute Loss: {absolute_loss:.3f}',
-            f'\nTotal Training Time: {int(minutes):02d}m {int(seconds):02d}s | Average Batch Time: {np.mean([log[3] for log in logger if isinstance(log[3], float)]):.3f}s')
+            f'\nTotal Training Time: {int(minutes):02d}m {int(seconds):02d}s | Average Batch Time: {np.mean([log[1] for log in logger if log[1]!=None]):.3f}s')
 
-        savelog = [("Timestamp", "Elapsed Time", "Learning Rate", "Batch Time", "Epoch", "Batch No.", "KL Weight", "Loss"),
-                  ("If Validation, then: " "Timestamp", "Elapsed Time", "Learning Rate", "Epoch", "KL Weight", "Averaged Loss")]
-        savelog.extend(logger)
-        with open(f"./Training Logs/{timestamp.replace('/', '-').replace(':', '.').replace(' ', '__')}.txt", "w") as file:
-            for log in savelog:
-                entry = ', '.join(map(str, log))
-                file.write(entry + '\n')
+        with open(f"./Training Logs/{self.timestamp}.txt", "w") as file:
+            for param in params:
+                file.write(' '.join(map(str, param)) + '\n')
+            for log in logger:
+                file.write(log[0]+ '\n')
         
         return absolute_loss
 
@@ -261,6 +258,7 @@ class net:
         
         accuracy = total_correct / total_pixels
         print(f'Accuracy: {accuracy:.3f}')
+        self.accuracy = accuracy
 
 
     # plot latent space
@@ -285,6 +283,8 @@ class net:
                 plt.colorbar()
                 break
             plt.tight_layout()
+        plt.show(block=False)
+        plt.savefig(f"./Latent Space Plots/{self.timestamp}.png")
     
     # plot reconstructions
     def prec(self, data_set, rangex=(-5, 10), rangey=(-10, 5), n=12, latent_dims = (0, 1)):
@@ -320,7 +320,9 @@ class net:
         plt.xlabel(f"Dimension {latent_dims[0]}", fontsize = 12)
         plt.ylabel(f"Dimension {latent_dims[1]}", fontsize = 12)
         plt.imshow(img, extent=[*rangex, *rangey])
+        plt.show(block=False)
         plt.tight_layout()
+        plt.savefig(f"./Latent Space Plots/{self.timestamp}.png")
 
     def pgen(self, dataloader, num_images=10):
         self.model.eval()
@@ -357,5 +359,7 @@ class net:
                 else:
                     ax2.axis('off')
             
+            axes[0, 0].set_title(f"Accuracy: {self.accuracy:.3f}", fontsize=15, fontweight='bold', pad=20)
             plt.tight_layout()
+            plt.savefig(f"./Generated Samples/{self.timestamp}.png")
             plt.show()
