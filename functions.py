@@ -337,29 +337,42 @@ class net:
                 recon_images = recon_images.view(num_images, 1, 28, 28)
             recon_images = recon_images.cpu()
 
-            fig, axes = plt.subplots(2, num_images, figsize=(15, 3), sharex=True, sharey=True)
+        cols = min(num_images, 5)
+        rows = (num_images + cols - 1) // cols
+        
+        fig = plt.figure(figsize=(15, 3 * rows))
+        gridspec = fig.add_gridspec(nrows=rows, ncols=12)
 
-            for i in range(num_images):
-                ax1 = axes[0, i]
-                ax2 = axes[1, i]
+        # Create subplots for original and reconstructed images with distinct background colors
+        axes_original = fig.add_subplot(gridspec[:, 0:6], facecolor='lightblue')
+        axes_reconstructed = fig.add_subplot(gridspec[:, 6:12])
 
-                ax1.imshow(images[i].view(28, 28).cpu(), cmap='gray')
-                if i == 0:
-                    ax1.set_ylabel("Original", weight='bold', fontsize=11)
-                    ax1.set_xticks([])
-                    ax1.set_yticks([])
-                else:
-                    ax1.axis('off')
+        # Turn off the axes for the overall subplots
+        axes_original.axis('off')
+        axes_reconstructed.axis('off')
 
-                ax2.imshow(recon_images[i].view(28, 28), cmap='gray')
-                if i == 0:
-                    ax2.set_ylabel("Reconstructed", weight='bold', fontsize=11)
-                    ax2.set_xticks([])
-                    ax2.set_yticks([])
-                else:
-                    ax2.axis('off')
-            
-            axes[0, 0].set_title(f"Accuracy: {self.accuracy:.3f}", fontsize=15, fontweight='bold', pad=20)
-            plt.tight_layout()
-            plt.savefig(f"./Generated Samples/{self.timestamp}.png")
-            plt.show()
+        for i in range(num_images):
+            row = i // cols
+            col = i % cols
+
+            ax1 = fig.add_subplot(gridspec[row, col])
+            ax2 = fig.add_subplot(gridspec[row, col + 6])
+
+            ax1.imshow(images[i].view(28, 28).cpu(), cmap='gray')
+            ax1.set_title(f"{i+1}", fontsize=10)
+            ax1.axis('off')
+
+            ax2.imshow(recon_images[i].view(28, 28), cmap='gray')
+            ax2.set_title(f"{i+1}", fontsize=10)
+            ax2.axis('off')
+
+        # Set overall titles for each half
+        axes_original.set_title("Original Images", weight='bold', fontsize=15, pad=20)
+        axes_reconstructed.set_title("Reconstructed Images", weight='bold', fontsize=15, pad=20)
+
+        # Set the overall title for the entire figure
+        fig.suptitle(f"Accuracy: {self.accuracy:.3f}", fontsize=20, fontweight='bold', y=1)
+
+        plt.tight_layout()
+        plt.savefig(f"./Generated Samples/{self.timestamp}.png")
+        plt.show()
