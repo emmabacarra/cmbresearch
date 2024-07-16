@@ -99,4 +99,4 @@ plt.subplot(1, 2, 2)
 nnet.prec(test_dataset, n=15, rangex=(-5, 5), rangey=(-5, 5), latent_dims=latent_dims)
 sns.despine()
 
-nnet.pgen(test_loader, num_images=10)
+nnet.pgen(test_loader, num_images=50)
