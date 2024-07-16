@@ -98,7 +98,7 @@ class net:
         self.x_dim = self.trloader.dataset[0][0].size()[1]*self.trloader.dataset[0][0].size()[2]
         self.train_size = len(self.trloader.dataset)
 
-    def train(self, optimizer, lsfn, epochs, kl_weight, live_plot=False, view_interval=100, averaging=True):
+    def train(self, optimizer, lsfn, epochs, kl_weight, live_plot=False, outliers=True, view_interval=100, averaging=True):
         logger = []
         valosses = [] # <-- per epoch
         batch_trlosses = [] # <-- per batch
@@ -138,10 +138,18 @@ class net:
                 # -------------------------------------------------------------------------------
                 if (i+1) % view_interval == 0 or i == len(self.trloader) - 1: # <-- plot for every specified interval of batches (and also account for the last batch)
                     avg_loss = loss_ct / counter
-                    if averaging:
-                        batch_trlosses.append(avg_loss) # <-- average loss of the interval
+                    if outliers:
+                        if averaging:
+                            batch_trlosses.append(avg_loss) # <-- average loss of the interval
+                        else:
+                            batch_trlosses.append(batch_loss.item())
+                    if not outliers and epoch > 1:
+                        if averaging:
+                            batch_trlosses.append(avg_loss) # <-- average loss of the interval
+                        else:
+                            batch_trlosses.append(batch_loss.item())
                     else:
-                        batch_trlosses.append(batch_loss.item())
+                        continue
                     loss_ct, counter = 0, 0 # reset for next interval
                 
                     if live_plot: # Plot losses and validation accuracy in real-time 
