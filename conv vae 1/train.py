@@ -46,15 +46,17 @@ transform = transforms.Compose([transforms.ToTensor()])
 path = '../../Local Data Files/MNIST'
 train_dataset = MNIST(path, transform=transform, download=True)
 test_dataset  = MNIST(path, transform=transform, download=True)
-# using the same data as testing since we are trying to reproduce the images
-print(type(train_dataset))
+if __name__ == '__main__':
+    # using the same data as testing since we are trying to reproduce the images
+    print(type(train_dataset))
 
 # 80-20 train-val split
 n_train = int(0.8*len(train_dataset))
 n_val = len(train_dataset) - n_train
 train_dataset, val_dataset = random_split(train_dataset, [n_train, n_val], generator=np.random.seed(0))
-print(f"Train dataset size: {len(train_dataset)}, Validation dataset size: {len(val_dataset)}, Test dataset size: {len(test_dataset)}")
-print(f"Image size: {train_dataset[0][0].size()}")
+if __name__ == '__main__':
+    print(f"Train dataset size: {len(train_dataset)}, Validation dataset size: {len(val_dataset)}, Test dataset size: {len(test_dataset)}")
+    print(f"Image size: {train_dataset[0][0].size()}")
 
 # create train, validation and test dataloaders
 batch_size = 100
@@ -90,20 +92,22 @@ nnet = net(model, train_loader, val_loader, test_loader, batch_size, linear=Fals
 
 optimizer = Adam(model.parameters(), lr=0.001, weight_decay=1e-10);
 
-nnet.train(optimizer=optimizer, lsfn=loss_function, epochs=5, kl_weight=0.1, live_plot=False)
-nnet.evaluate(test_loader)
+if __name__ == '__main__':
+    nnet.train(optimizer=optimizer, lsfn=loss_function, epochs=15, kl_weight=0.1, live_plot=False)
+    torch.save(nnet.model.state_dict(), 'saved_model.pth')
+    nnet.evaluate(test_loader)
 
-latent_dims = (0, 1)
-print(f"Selected latent dimensions: {latent_dims}")
+    latent_dims = (0, 1)
+    print(f"Selected latent dimensions: {latent_dims}")
 
-plt.figure(figsize = (10, 5))
+    plt.figure(figsize = (10, 5))
 
-plt.subplot(1, 2, 1)
-nnet.plat(test_loader, latent_dims) 
-sns.despine()
+    plt.subplot(1, 2, 1)
+    nnet.plat(test_loader, latent_dims) 
+    sns.despine()
 
-plt.subplot(1, 2, 2)
-nnet.prec(test_dataset, n=15, rangex=(-5, 5), rangey=(-5, 5), latent_dims=latent_dims)
-sns.despine()
+    plt.subplot(1, 2, 2)
+    nnet.prec(test_dataset, n=15, rangex=(-5, 5), rangey=(-5, 5), latent_dims=latent_dims)
+    sns.despine()
 
-nnet.pgen(test_loader, num_images=50)
+    nnet.pgen(test_loader, num_images=50)

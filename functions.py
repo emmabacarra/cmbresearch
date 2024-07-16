@@ -376,3 +376,29 @@ class net:
         plt.tight_layout()
         plt.savefig(f"./Generated Samples/{self.timestamp}.png")
         plt.show()
+
+
+
+'''
+------------------------------------------------------------------------------------------------------------------------------------------
+'''
+import sys
+class TempPath:
+    def __init__(self, path):
+        self.path = os.path.abspath(path)
+
+    def __enter__(self):
+        sys.path.append(self.path)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        sys.path.remove(self.path)
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+def load_output(model, loader, num_images):
+    with torch.no_grad():
+        data_iter = iter(loader)
+        images, _ = next(data_iter)
+        images = images[:num_images].to(device)
+        recon_images, _, _ = model(images)
+        recon_images = recon_images.cpu()
+    return recon_images
