@@ -168,7 +168,7 @@ class net:
                     logger.info(batch_log)
                     batch_times.append(batch_time)
 
-                    # -------------------------------------------------------------------------------
+                    # ------------------------- FOR REAL-TIME PLOTTING ------------------------------------------------------
                     if (i + 1) % view_interval == 0 or i == len(self.trloader) - 1:  # <-- plot for every specified interval of batches (and also account for the last batch)
                         avg_loss = loss_ct / counter
                         if outliers:
