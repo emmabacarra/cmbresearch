@@ -156,7 +156,7 @@ class net:
                     optimizer.zero_grad()
 
                     outputs, mean, log_var = self.model(batch)
-                    batch_loss = lsfn(batch, outputs, mean, log_var, kl_weight)
+                    batch_loss, reconstruction_loss, KLD = lsfn(batch, outputs, mean, log_var, kl_weight)
                     loss_ct += batch_loss.item()
                     absolute_loss += batch_loss.item()
 
@@ -164,7 +164,7 @@ class net:
                     elapsed_time = time.time() - start_time
                     learning_rate = optimizer.param_groups[0]['lr']
 
-                    batch_log = f'({elapsed_time:.2f}s) | Epoch: {epoch} | Batch: {i} ({batch_time:.3f}s) | LR: {learning_rate} | KL Weight: {kl_weight} | Loss: {batch_loss.item():.2f}'
+                    batch_log = f'({elapsed_time:.2f}s) Ep. {epoch}/{epochs}, B #{i} ({batch_time:.3f}s) | LR: {learning_rate} | KLD: {KLD:.3f}, KLW: {kl_weight}, Rec. Loss: {reconstruction_loss:.3f} | Loss: {batch_loss.item():.2f} | Abs. Loss: {absolute_loss:.2f}'
                     logger.info(batch_log)
                     batch_times.append(batch_time)
 
@@ -220,7 +220,7 @@ class net:
                         batch = batch.to(self.device)
 
                         outputs, mean, log_var = self.model(batch)
-                        batch_loss = lsfn(batch, outputs, mean, log_var, kl_weight)
+                        batch_loss, reconstruction_loss, KLD = lsfn(batch, outputs, mean, log_var, kl_weight)
 
                         tot_valoss += batch_loss.item()
 
@@ -230,7 +230,7 @@ class net:
                     elapsed_time = time.time() - start_time
                     learning_rate = optimizer.param_groups[0]['lr']
 
-                    val_log = f'VALIDATION (Epoch {epoch}/{epochs}) | LR: {learning_rate} | KL Weight: {kl_weight} | Loss: {avg_val_loss:.2f} -----------'
+                    val_log = f'VALIDATION (Epoch {epoch}/{epochs}) | LR: {learning_rate} | KLD: {KLD:.3f}, KLW: {kl_weight}, Rec. Loss: {reconstruction_loss:.3f} | Loss: {avg_val_loss:.2f} |  Abs. Loss: {absolute_loss:.2f} -----------'
                     logger.info(val_log)
 
             end_time = time.time()

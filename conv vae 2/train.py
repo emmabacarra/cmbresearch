@@ -73,7 +73,7 @@ img_size = train_dataset[0][0].size()[1]*train_dataset[0][0].size()[2]
 '''
 
 def loss_function(x, x_hat, mean, log_var, kl_weight=1):
-    reproduction_loss = nn.functional.binary_cross_entropy(x_hat, x, reduction='mean')
+    reproduction_loss = nn.functional.binary_cross_entropy(x_hat, x, reduction='sum')
     KLD = - 0.5 * torch.sum(1+ log_var - mean.pow(2) - log_var.exp())
 
     # loss = reconstruction loss + similarity loss (KL divergence)
@@ -86,14 +86,14 @@ model = ConvVAE(
             padding=12,
             latent_dim=16, 
             leak=0.99, drop=0.01,
-            stochastic=False # setting to False makes this deterministic (no sampling) - i.e. a normal autoencoder
+            stochastic=True
         ).to(device)
 nnet = net(model, train_loader, val_loader, test_loader, batch_size, linear=False);
 
 optimizer = Adam(model.parameters(), lr=0.001, weight_decay=1e-10);
 
 if __name__ == '__main__':
-    nnet.train(optimizer=optimizer, lsfn=loss_function, epochs=150, kl_weight=0.1, live_plot=False, outliers=False)
+    nnet.train(optimizer=optimizer, lsfn=loss_function, epochs=15, kl_weight=0, live_plot=False)
     torch.save(nnet.model.state_dict(), 'saved_model.pth')
     nnet.evaluate(test_loader)
 

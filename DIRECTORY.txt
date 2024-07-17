@@ -1,0 +1,29 @@
+linear vae
+- linear architecture
+- accuracy ~68.3%
+
+conv vae og (or conv vae 0)
+- convolutional, KL weight set to 1
+- accuracy ~89.7%
+
+conv vae 1 
+- duplicated from conv vae og
+- no architectural changes, adjusted KL weight to 0.1
+- accuracy ~83.5%
+
+conv vae 2 (**renamed from conv vae 3 on 7/17/24)
+- duplicated from conv vae og
+- set KL weight to 0
+- accuracy ~83.6%
+
+det ae 1 (**renamed from conv vae 2 on 7/17/24)
+- duplicated from conv vae og
+- set stochastic = False
+- accuracy ~83.7%
+
+det ae 2 
+- duplicated from det ae 1
+- set stochastic = False
+- lr changed to 1e-4, 150 epochs
+- changed reduction in loss_function from 'sum' to 'mean'
+- accuracy ~83.8%
