@@ -18,11 +18,13 @@ conv vae 2 (**renamed from conv vae 3 on 7/17/24)
 
 det ae 1 (**renamed from conv vae 2 on 7/17/24)
 - duplicated from conv vae og
+- excludes outlier losses from first epoch
 - set stochastic = False
 - accuracy ~83.7%
 
 det ae 2 
 - duplicated from det ae 1
+- excludes outlier losses from first epoch
 - set stochastic = False
 - lr changed to 1e-4, 150 epochs
 - changed reduction in loss_function from 'sum' to 'mean'
