@@ -5,7 +5,7 @@ from astropy.io import fits
 import astropy.visualization as vis
 import matplotlib.pyplot as plt
 import time
-from IPython.display import display, HTML, Image, clear_output
+from IPython.display import clear_output
 
 
 def FitsMapper(files, hdul_index, nrows, ncols, cmap, interpolation, 
@@ -64,26 +64,7 @@ def FitsMapper(files, hdul_index, nrows, ncols, cmap, interpolation,
 '''
 ------------------------------------------------------------------------------------------------------------------------------------------
 '''
-
-# pytorch functionalities
 import torch
-import torch.nn as nn
-from torch.optim import Adam
-import torch.nn.functional as F
-
-# plotting & visualization
-import seaborn as sns
-import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
-from mpl_toolkits.axes_grid1 import ImageGrid
-from torchvision.utils import save_image, make_grid
-import time
-
-# others
-import tqdm
-import numpy as np
-import webp
-from IPython.display import clear_output
 import logging
 
 class net:
