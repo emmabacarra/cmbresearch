@@ -84,6 +84,7 @@ import tqdm
 import numpy as np
 import webp
 from IPython.display import clear_output
+import logging
 
 class net:
     def __init__(self, model, trloader, valoader, teloader, batch_size, linear=True):
@@ -99,150 +100,186 @@ class net:
         self.train_size = len(self.trloader.dataset)
 
     def train(self, optimizer, lsfn, epochs, kl_weight, live_plot=False, outliers=True, view_interval=100, averaging=True):
-        logger = []
-        valosses = [] # <-- per epoch
-        batch_trlosses = [] # <-- per batch
+        # ========================== Logger Configuration ==========================
+        torch.backends.cudnn.benchmark = True
+        torch.set_printoptions(profile="full")
+
+        self.timestamp = time.strftime('%m-%d-%y_%H-%M-%S', time.localtime())
+
+        logger = logging.getLogger(__name__)
+        logger.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s %(message)s', datefmt='%m/%d/%y %H:%M:%S')
+
+        # file handler
+        file_handler = logging.FileHandler(f'./Training Logs/{self.timestamp}.log')
+        file_handler.setLevel(logging.INFO)
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
+
+        # console handler
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.INFO)
+        console_handler.setFormatter(formatter)
+        logger.addHandler(console_handler)
+
+        # ---------------------------------------------------------------------------
+        valosses = []  # <-- per epoch
+        batch_trlosses = []  # <-- per batch
         batch_ints = self.train_size / (self.batch_size * view_interval)
+        batch_times = []
         absolute_loss = 0
+        self.epoch = 0
 
+        params = [tuple(self.model.params().items()),
+                  tuple(self.model.encoder.params().items()),
+                  tuple(self.model.decoder.params().items())]
+        logger.info(f'Training initiated with the following parameters:'
+                    f'\nModel Parameters: {params[0]}'
+                    f'\nEncoder Parameters: {params[1]}'
+                    f'\nDecoder Parameters: {params[2]}\n')
+        
         start_time = time.time()
-        for epoch in range(1, epochs+1):
-            
-            # ========================= training losses =========================
-            self.model.train()
-            loss_ct, counter = 0, 0
-            for i, (batch, _) in enumerate(self.trloader):
-                batch_start = time.time()
-                counter += 1
-                
-                if self.linear:
-                    batch = batch.view(self.batch_size, self.x_dim)
-                batch = batch.to(self.device)
-
-                optimizer.zero_grad()
-
-                outputs, mean, log_var = self.model(batch)
-                batch_loss = lsfn(batch, outputs, mean, log_var, kl_weight)
-                loss_ct += batch_loss.item()
-                absolute_loss += batch_loss.item()
-
-                self.timestamp = time.strftime('%m/%d/%y %H:%M:%S', time.localtime())
-                batch_time = time.time() - batch_start
-                elapsed_time = time.time() - start_time
-                learning_rate = optimizer.param_groups[0]['lr']
-                
-                batch_log = f'[{self.timestamp}] ({elapsed_time:.2f}s) | Epoch: {epoch} | Batch: {i} ({batch_time:.3f}s) | LR: {learning_rate} | KL Weight: {kl_weight} | Loss: {batch_loss.item()}'
-                logger.append((batch_log, batch_time))
-                print(batch_log)
-
-                # -------------------------------------------------------------------------------
-                if (i+1) % view_interval == 0 or i == len(self.trloader) - 1: # <-- plot for every specified interval of batches (and also account for the last batch)
-                    avg_loss = loss_ct / counter
-                    if outliers:
-                        if averaging:
-                            batch_trlosses.append(avg_loss) # <-- average loss of the interval
-                        else:
-                            batch_trlosses.append(batch_loss.item())
-                    if not outliers and epoch > 1:
-                        if averaging:
-                            batch_trlosses.append(avg_loss) # <-- average loss of the interval
-                        else:
-                            batch_trlosses.append(batch_loss.item())
-                    else:
-                        continue
-                    loss_ct, counter = 0, 0 # reset for next interval
-                
-                    if live_plot: # Plot losses and validation accuracy in real-time 
-                        fig, ax = plt.subplots(figsize=(12, 5))
-                        clear_output(wait=True)
-                        ax.clear()
-
-                        ax.set_title(f'Performance (Epoch {epoch}/{epochs})', weight='bold', fontsize=15)
-                        ax.plot(list(range(1, len(batch_trlosses) + 1)), batch_trlosses, 
-                                label=f'Training Loss \nLowest: {min(batch_trlosses):.3f} \nAverage: {np.mean(batch_trlosses):.3f} \n', 
-                                linewidth=3, color='blue', marker='o', markersize=3)
-                        if len(valosses) > 0:
-                            ax.plot([i*batch_ints for i in range(1, len(valosses)+1)], valosses, 
-                                    label=f'Validation Loss \nLowest: {min(valosses):.3f} \nAverage: {np.mean(valosses):.3f}', 
-                                    linewidth = 3, color = 'gold', marker = 'o', markersize = 3)
-                        ax.set_ylabel("Loss")
-                        ax.set_xlabel(f"Batch Intervals (per {view_interval} batches)")
-                        ax.set_xlim(1, len(batch_trlosses) + 1)
-                        ax.legend(title = f'Absolute loss: {round(absolute_loss, 3)}', bbox_to_anchor=(1, 1), loc='upper right')
-
-                        plt.show(block=False)
-                # -------------------------------------------------------------------------------
-                batch_loss.backward()
-                optimizer.step()
-            
-            # ========================= validation losses =========================
-            self.model.eval()
-            with torch.no_grad():
-                tot_valoss = 0
-                for batch, _ in self.valoader:
+        try:
+            for epoch in range(1, epochs + 1):
+                self.epoch = epoch
+                # ========================= training losses =========================
+                self.model.train()
+                loss_ct, counter = 0, 0
+                for i, (batch, _) in enumerate(self.trloader):
+                    batch_start = time.time()
+                    counter += 1
 
                     if self.linear:
                         batch = batch.view(self.batch_size, self.x_dim)
                     batch = batch.to(self.device)
 
+                    optimizer.zero_grad()
+
                     outputs, mean, log_var = self.model(batch)
                     batch_loss = lsfn(batch, outputs, mean, log_var, kl_weight)
+                    loss_ct += batch_loss.item()
+                    absolute_loss += batch_loss.item()
 
-                    tot_valoss += batch_loss.item()
+                    batch_time = time.time() - batch_start
+                    elapsed_time = time.time() - start_time
+                    learning_rate = optimizer.param_groups[0]['lr']
 
-                avg_val_loss = tot_valoss / len(self.valoader)
-                valosses.append(avg_val_loss)
-                
-                self.timestamp = time.strftime('%m/%d/%y %H:%M:%S', time.localtime())
-                elapsed_time = time.time() - start_time
-                learning_rate = optimizer.param_groups[0]['lr']
-                
-                val_log = f'[{self.timestamp}] ({elapsed_time:.2f}s)  VALIDATION (Epoch {epoch}/{epochs}) | LR: {learning_rate} | KL Weight: {kl_weight} | Loss: {avg_val_loss} -----------'
-                logger.append((val_log, None))
-                print(val_log)
+                    batch_log = f'({elapsed_time:.2f}s) | Epoch: {epoch} | Batch: {i} ({batch_time:.3f}s) | LR: {learning_rate} | KL Weight: {kl_weight} | Loss: {batch_loss.item():.2f}'
+                    logger.info(batch_log)
+                    batch_times.append(batch_time)
 
-        end_time = time.time()
-        
-        self.timestamp = self.timestamp.replace('/', '-').replace(':', '.').replace(' ', '__')
-        # -------------------------------------------------------------------------------
-        # final plot to account for all tracked losses in an epoch =========================
-        fig, ax = plt.subplots(figsize=(12, 5))
-        clear_output(wait=True)
-        ax.clear()
+                    # -------------------------------------------------------------------------------
+                    if (i + 1) % view_interval == 0 or i == len(self.trloader) - 1:  # <-- plot for every specified interval of batches (and also account for the last batch)
+                        avg_loss = loss_ct / counter
+                        if outliers:
+                            if averaging:
+                                batch_trlosses.append(avg_loss)  # <-- average loss of the interval
+                            else:
+                                batch_trlosses.append(batch_loss.item())
+                        if not outliers and epoch > 1:
+                            if averaging:
+                                batch_trlosses.append(avg_loss)  # <-- average loss of the interval
+                            else:
+                                batch_trlosses.append(batch_loss.item())
+                        else:
+                            continue
+                        loss_ct, counter = 0, 0  # reset for next interval
 
-        ax.set_title(f'Performance (Epoch {epochs}/{epochs})', weight='bold', fontsize=15)
-        ax.plot(list(range(1, len(batch_trlosses) + 1)), batch_trlosses, 
-                label=f'Training Loss \nLowest: {min(batch_trlosses):.3f} \nAverage: {np.mean(batch_trlosses):.3f} \n', 
-                linewidth=3, color='blue', marker='o', markersize=3)
-        if len(valosses) > 0:
-            ax.plot([i*batch_ints for i in range(1, len(valosses)+1)], valosses, 
-                    label=f'Validation Loss \nLowest: {min(valosses):.3f} \nAverage: {np.mean(valosses):.3f}', 
-                    linewidth = 3, color = 'gold', marker = 'o', markersize = 3)
-        ax.set_ylabel("Loss")
-        ax.set_xlabel(f"Batch Intervals (per {view_interval} batches)")
-        ax.set_xlim(1, len(batch_trlosses) + 1)
-        ax.legend(title = f'Absolute loss: {round(absolute_loss, 3)}', bbox_to_anchor=(1, 1), loc='upper right')
+                        if live_plot:  # Plot losses and validation accuracy in real-time
+                            fig, ax = plt.subplots(figsize=(12, 5))
+                            clear_output(wait=True)
+                            ax.clear()
 
-        plt.show(block=False)
-        plt.savefig(f"./Loss Plots/{self.timestamp}.png", bbox_inches='tight')
-        # -------------------------------------------------------------------------------
-        params = [("Model Parameters: ", tuple(self.model.params().items())),
-                   ("Encoder Parameters: ", tuple(self.model.encoder.params().items())),
-                   ("Decoder Parameters: ", tuple(self.model.decoder.params().items()))]
+                            ax.set_title(f'Performance (Epoch {epoch}/{epochs})', weight='bold', fontsize=15)
+                            ax.plot(list(range(1, len(batch_trlosses) + 1)), batch_trlosses,
+                                    label=f'Training Loss \nLowest: {min(batch_trlosses):.3f} \nAverage: {np.mean(batch_trlosses):.3f} \n',
+                                    linewidth=3, color='blue', marker='o', markersize=3)
+                            if len(valosses) > 0:
+                                ax.plot([i * batch_ints for i in range(1, len(valosses) + 1)], valosses,
+                                        label=f'Validation Loss \nLowest: {min(valosses):.3f} \nAverage: {np.mean(valosses):.3f}',
+                                        linewidth=3, color='gold', marker='o', markersize=3)
+                            ax.set_ylabel("Loss")
+                            ax.set_xlabel(f"Batch Intervals (per {view_interval} batches)")
+                            ax.set_xlim(1, len(batch_trlosses) + 1)
+                            ax.legend(title=f'Absolute loss: {round(absolute_loss, 3)}', bbox_to_anchor=(1, 1), loc='upper right')
+
+                            plt.show(block=False)
+                    # -------------------------------------------------------------------------------
+                    batch_loss.backward()
+                    optimizer.step()
+
+                # ========================= validation losses =========================
+                self.model.eval()
+                with torch.no_grad():
+                    tot_valoss = 0
+                    for batch, _ in self.valoader:
+
+                        if self.linear:
+                            batch = batch.view(self.batch_size, self.x_dim)
+                        batch = batch.to(self.device)
+
+                        outputs, mean, log_var = self.model(batch)
+                        batch_loss = lsfn(batch, outputs, mean, log_var, kl_weight)
+
+                        tot_valoss += batch_loss.item()
+
+                    avg_val_loss = tot_valoss / len(self.valoader)
+                    valosses.append(avg_val_loss)
+
+                    elapsed_time = time.time() - start_time
+                    learning_rate = optimizer.param_groups[0]['lr']
+
+                    val_log = f'VALIDATION (Epoch {epoch}/{epochs}) | LR: {learning_rate} | KL Weight: {kl_weight} | Loss: {avg_val_loss:.2f} -----------'
+                    logger.info(val_log)
+
+            end_time = time.time()
             
-        minutes, seconds = divmod(end_time - start_time, 60)
-        print('===========================================================================================',
-            '\n===========================================================================================',
-            "\n", params[0], "\n", params[1], "\n", params[2], "\n",
-            f'\nAbsolute Loss: {absolute_loss:.3f}',
-            f'\nTotal Training Time: {int(minutes):02d}m {int(seconds):02d}s | Average Batch Time: {np.mean([log[1] for log in logger if log[1]!=None]):.3f}s')
+        except KeyboardInterrupt:
+            logger.warning("Training was interrupted by the user.")
+        except Exception as e:
+            logger.error(f"An error has occurred: {e}", exc_info=True)
+            raise
 
-        with open(f"./Training Logs/{self.timestamp}.txt", "w") as file:
-            for param in params:
-                file.write(' '.join(map(str, param)) + '\n')
-            for log in logger:
-                file.write(log[0]+ '\n')
-        
+        finally:
+            try:
+                end_time = time.time()
+
+                minutes, seconds = divmod(end_time - start_time, 60)
+                logger.info(
+                    '\n===========================================================================================\n'
+                    '\n===========================================================================================\n'
+                   f'\nModel Parameters: {params[0]}'
+                   f'\nEncoder Parameters: {params[1]}'
+                   f'\nDecoder Parameters: {params[2]}\n'
+                   f'\nEpochs: {self.epoch}/{epochs} | Absolute Loss: {absolute_loss:.3f}'
+                   f'\nTotal Training Time: {int(minutes):02d}m {int(seconds):02d}s | Average Batch Time: {np.mean(batch_times):.3f}s'
+                )
+                
+                # Final plot to account for all tracked losses in an epoch
+                fig, ax = plt.subplots(figsize=(12, 5))
+                clear_output(wait=True)
+                ax.clear()
+
+                ax.set_title(f'Performance (Epoch {self.epoch}/{epochs})', weight='bold', fontsize=15)
+                ax.plot(list(range(1, len(batch_trlosses) + 1)), batch_trlosses,
+                        label=f'Training Loss \nLowest: {min(batch_trlosses):.3f} \nAverage: {np.mean(batch_trlosses):.3f} \n',
+                        linewidth=3, color='blue', marker='o', markersize=3)
+                if len(valosses) > 0:
+                    ax.plot([i * batch_ints for i in range(1, len(valosses) + 1)], valosses,
+                            label=f'Validation Loss \nLowest: {min(valosses):.3f} \nAverage: {np.mean(valosses):.3f}',
+                            linewidth=3, color='gold', marker='o', markersize=3)
+                ax.set_ylabel("Loss")
+                ax.set_xlabel(f"Batch Intervals (per {view_interval} batches)")
+                ax.set_xlim(1, len(batch_trlosses) + 1)
+                ax.legend(title=f'Absolute loss: {round(absolute_loss, 3)}', bbox_to_anchor=(1, 1), loc='upper right')
+
+                plt.show(block=False)
+                plt.savefig(f"./Loss Plots/{self.timestamp}.png", bbox_inches='tight')
+
+            except Exception as e:
+                logger.error(f"An error has occurred: {e}", exc_info=True)
+                raise
+
         return absolute_loss
 
 
