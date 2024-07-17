@@ -168,7 +168,7 @@ class net:
                     logger.info(batch_log)
                     batch_times.append(batch_time)
 
-                    # ------------------------- FOR REAL-TIME PLOTTING ------------------------------------------------------
+                    # ------------------------- Recording Loss ------------------------------------------------------
                     if (i + 1) % view_interval == 0 or i == len(self.trloader) - 1:  # <-- plot for every specified interval of batches (and also account for the last batch)
                         avg_loss = loss_ct / counter
                         if outliers:
@@ -185,6 +185,7 @@ class net:
                             continue
                         loss_ct, counter = 0, 0  # reset for next interval
 
+                        # ------------------------- FOR REAL-TIME PLOTTING ------------------------------------------------------
                         if live_plot:  # Plot losses and validation accuracy in real-time
                             fig, ax = plt.subplots(figsize=(12, 5))
                             clear_output(wait=True)
