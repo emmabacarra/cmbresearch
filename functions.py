@@ -104,7 +104,7 @@ class net:
         torch.backends.cudnn.benchmark = True
         torch.set_printoptions(profile="full")
 
-        self.timestamp = time.strftime('%m-%d-%y_%H-%M-%S', time.localtime())
+        self.timestamp = time.strftime('%m-%d-%y__%H-%M-%S', time.localtime())
 
         logger = logging.getLogger(__name__)
         logger.setLevel(logging.DEBUG)
@@ -162,9 +162,10 @@ class net:
 
                     batch_time = time.time() - batch_start
                     elapsed_time = time.time() - start_time
+                    minutes, seconds = divmod(int(elapsed_time), 60)
                     learning_rate = optimizer.param_groups[0]['lr']
 
-                    batch_log = f'({elapsed_time:.2f}s) Ep. {epoch}/{epochs}, B #{i} ({batch_time:.3f}s) | LR: {learning_rate} | KLD: {KLD:.3f}, KLW: {kl_weight}, Rec. Loss: {reconstruction_loss:.3f} | Loss: {batch_loss.item():.2f} | Abs. Loss: {absolute_loss:.2f}'
+                    batch_log = f'({int(minutes)}m {int(seconds):02d}s) | [{epoch}/{epochs}] Batch {i} ({batch_time:.3f}s) | LR: {learning_rate} | KLD: {KLD:.3f}, KLW: {kl_weight}, Rec. Loss: {reconstruction_loss:.3f} | Loss: {batch_loss.item():.2f} | Abs. Loss: {absolute_loss:.2f}'
                     logger.info(batch_log)
                     batch_times.append(batch_time)
 
@@ -247,13 +248,13 @@ class net:
 
                 minutes, seconds = divmod(end_time - start_time, 60)
                 logger.info(
-                    '\n===========================================================================================\n'
+                    '\n==========================================================================================='
                     '\n===========================================================================================\n'
                    f'\nModel Parameters: {params[0]}'
                    f'\nEncoder Parameters: {params[1]}'
                    f'\nDecoder Parameters: {params[2]}\n'
-                   f'\nEpochs: {self.epoch}/{epochs} | Absolute Loss: {absolute_loss:.3f}'
-                   f'\nTotal Training Time: {int(minutes):02d}m {int(seconds):02d}s | Average Batch Time: {np.mean(batch_times):.3f}s'
+                   f'\nCompleted Epochs: {self.epoch}/{epochs} | Avg Tr.Loss: {np.mean(batch_trlosses):.3f} | Absolute Loss: {absolute_loss:.3f}'
+                   f'\nTotal Training Time: {int(minutes)}m {int(seconds):02d}s | Average Batch Time: {np.mean(batch_times):.3f}s'
                 )
                 
                 # Final plot to account for all tracked losses in an epoch

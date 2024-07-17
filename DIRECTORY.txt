@@ -4,6 +4,7 @@ linear vae
 
 conv vae og (or conv vae 0)
 - convolutional, KL weight set to 1
+- reduction in loss function set to 'sum'
 - accuracy ~89.7%
 
 conv vae 1 
