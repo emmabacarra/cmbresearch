@@ -445,7 +445,7 @@ class net:
 import sys
 import gc
 import importlib.util
-class ExtractOuts:
+class ExtractOuts: 
     def __init__(self, path, loader, num_images):
         self.path = path
         self.loader = loader
