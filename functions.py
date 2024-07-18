@@ -80,6 +80,24 @@ class net:
         self.x_dim = self.trloader.dataset[0][0].size()[1]*self.trloader.dataset[0][0].size()[2]
         self.train_size = len(self.trloader.dataset)
 
+    def save_checkpoint(self, epoch, optimizer, path='checkpoint.pth'):
+        state = {
+            'epoch': epoch,
+            'state_dict': self.model.state_dict(),
+            'optimizer': optimizer.state_dict()
+        }
+        torch.save(state, path)
+
+    def load_checkpoint(self, optimizer, path='checkpoint.pth'):
+        if os.path.isfile(path):
+            checkpoint = torch.load(path)
+            self.model.load_state_dict(checkpoint['state_dict'])
+            optimizer.load_state_dict(checkpoint['optimizer'])
+            start_epoch = checkpoint['epoch'] + 1
+            return start_epoch
+        else:
+            raise FileNotFoundError(f"No checkpoint found at '{path}'")
+    
     def train(self, optimizer, lsfn, epochs, kl_weight, live_plot=False, outliers=True, view_interval=100, averaging=True):
         # ========================== Logger Configuration ==========================
         torch.backends.cudnn.benchmark = True
@@ -215,18 +233,31 @@ class net:
 
                     val_log = f'({int(minutes)}m {int(seconds):02d}s) | VALIDATION (Epoch {epoch}/{epochs}) | LR: {learning_rate} | KLD: {KLD:.3f}, KLW: {kl_weight}, Rec. Loss: {reconstruction_loss:.3f} | Loss: {avg_val_loss:.2f} |  Abs. Loss: {absolute_loss:.2f} -----------'
                     logger.info(val_log)
+                
+                # checkpoint
+                os.makedirs('./Checkpoints', exist_ok=True)
+                self.save_checkpoint(epoch, optimizer, path=f'./Checkpoints/{self.timestamp}.pth')
+                logger.info(f'Checkpoint saved for epoch {epoch}.')
 
             end_time = time.time()
             
         except KeyboardInterrupt:
             logger.warning("Training was interrupted by the user.")
+            self.save_checkpoint(epoch, optimizer, path=f'./Checkpoints/{self.timestamp} interrupted.pth')
+            logger.info(f'Checkpoint saved for epoch {epoch}.')
+
         except Exception as e:
             logger.error(f"An error has occurred: {e}", exc_info=True)
+            self.save_checkpoint(epoch, optimizer, path=f'./Checkpoints/{self.timestamp} error.pth')
+            logger.info(f'Checkpoint saved for epoch {epoch}.')
             raise
 
         finally:
             try:
                 end_time = time.time()
+
+                torch.save(self.model.state_dict(), 'saved_model.pth')
+                logger.info(f"Model saved as 'saved_model.pth'.")
 
                 minutes, seconds = divmod(end_time - start_time, 60)
                 logger.info(

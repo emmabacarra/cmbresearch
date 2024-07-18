@@ -96,8 +96,8 @@ def get_model():
     return model
 
 if __name__ == '__main__':
-    nnet.train(optimizer=optimizer, lsfn=loss_function, epochs=150, kl_weight=0.1, live_plot=False, outliers=False)
-    torch.save(nnet.model.state_dict(), 'saved_model.pth')
+    nnet.train(optimizer=optimizer, lsfn=loss_function, epochs=500, kl_weight=0.1, live_plot=False, outliers=False)
+    # torch.save(nnet.model.state_dict(), 'saved_model.pth')
     nnet.evaluate(test_loader)
 
     latent_dims = (0, 1)
