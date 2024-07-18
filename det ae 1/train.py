@@ -92,6 +92,9 @@ nnet = net(model, train_loader, val_loader, test_loader, batch_size, linear=Fals
 
 optimizer = Adam(model.parameters(), lr=0.001, weight_decay=1e-10);
 
+def get_model():
+    return model
+
 if __name__ == '__main__':
     nnet.train(optimizer=optimizer, lsfn=loss_function, epochs=35, kl_weight=0.1, live_plot=False, outliers=False)
     torch.save(nnet.model.state_dict(), 'saved_model.pth')

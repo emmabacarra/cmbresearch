@@ -412,22 +412,44 @@ class net:
 ------------------------------------------------------------------------------------------------------------------------------------------
 '''
 import sys
-class TempPath:
-    def __init__(self, path):
-        self.path = os.path.abspath(path)
+import gc
+import importlib.util
+class ExtractOuts:
+    def __init__(self, path, loader, num_images):
+        self.path = path
+        self.loader = loader
+        self.num_images = num_images
+        self.model = None
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+    def load_output(self):
+        with torch.no_grad():
+            data_iter = iter(self.loader)
+            images, _ = next(data_iter)
+            images = images[:self.num_images].to(self.device)
+            recon_images, _, _ = self.model(images)
+            return images.cpu(), recon_images.cpu()
+    
     def __enter__(self):
         sys.path.append(self.path)
+        spec = importlib.util.spec_from_file_location('train', os.path.join(self.path, 'train.py'))
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.model = module.get_model().to(self.device)
+        self.model.load_state_dict(torch.load(os.path.join(self.path, 'saved_model.pth')))
+        # from train import model as model_class
+        # self.model = model_class.to(self.device)
+        # self.model.load_state_dict(torch.load(f'{self.path}/saved_model.pth'))
+        self.model.eval()
+
+        original, reconstructions = self.load_output()
+        return original, reconstructions
+
+    def __exit__(self, exc_type, exc_value, traceback):
         sys.path.remove(self.path)
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-def load_output(model, loader, num_images):
-    with torch.no_grad():
-        data_iter = iter(loader)
-        images, _ = next(data_iter)
-        images = images[:num_images].to(device)
-        recon_images, _, _ = model(images)
-        recon_images = recon_images.cpu()
-    return recon_images
+        self.model.to('cpu')
+        del self.model
+        self.model = None
+        gc.collect()
+        torch.cuda.empty_cache()
