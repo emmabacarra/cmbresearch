@@ -68,12 +68,12 @@ import torch
 import logging
 
 class net:
-    def __init__(self, model, trloader, valoader, teloader, batch_size, linear=True):
+    def __init__(self, model, trloader, valoader, batch_size, linear=True):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = model.to(self.device)
         self.trloader = trloader
         self.valoader = valoader
-        self.teloader = teloader
+        # self.teloader = teloader
         self.batch_size = batch_size
         self.linear = linear
         
@@ -298,21 +298,21 @@ class net:
         return absolute_loss
 
 
-    def evaluate(self, dataloader, threshold=0.1):
+    def evaluate(self, threshold=0.1):
         self.model.eval()
         total_correct = 0
         total_pixels = 0
 
         with torch.no_grad():
-            for images, _ in dataloader:
+            for images, _ in self.valoader:
                 images = images.to(self.device)
                 if self.linear:
                     images = images.view(images.size(0), -1)
-                recon_images, _, _ = self.model(images)
-                recon_images = recon_images.view_as(images)
+                reconstruction_images, _, _ = self.model(images)
+                reconstruction_images = reconstruction_images.view_as(images)
 
                 # Calculate the number of correctly reconstructed pixels
-                correct_pixels = (torch.abs(images - recon_images) < threshold).type(torch.float).sum().item()
+                correct_pixels = (torch.abs(images - reconstruction_images) < threshold).type(torch.float).sum().item()
                 total_correct += correct_pixels
                 total_pixels += images.numel()
         
@@ -322,8 +322,8 @@ class net:
 
 
     # plot latent space
-    def plat(self, data_loader, latent_dims=(0, 1)):
-        for i, (x, y) in enumerate(data_loader):
+    def plat(self, latent_dims=(0, 1)):
+        for i, (x, y) in enumerate(self.valoader):
             if self.linear:
                 x = x.view(x.size(0), -1)
             x = x.to(self.device)
@@ -347,7 +347,7 @@ class net:
         plt.savefig(f"./Latent Space Plots/{self.timestamp}.png")
     
     # plot reconstructions
-    def prec(self, data_set, rangex=(-5, 10), rangey=(-10, 5), n=12, latent_dims = (0, 1)):
+    def prec(self, rangex=(-5, 10), rangey=(-10, 5), n=12, latent_dims = (0, 1)):
         '''
         range in the latent space to generate:
             rangex = range of x values
@@ -355,7 +355,7 @@ class net:
 
         n = number of images to plot
         '''
-        w = data_set[0][0].size()[1]  # image width
+        w = self.valoader.dataset[0][0].size()[1]  # image width
         img = np.zeros((n*w, n*w))
         for i, y in enumerate(np.linspace(*rangey, n)):
             for j, x in enumerate(np.linspace(*rangex, n)):
@@ -384,18 +384,18 @@ class net:
         plt.tight_layout()
         plt.savefig(f"./Latent Space Plots/{self.timestamp}.png")
 
-    def pgen(self, dataloader, num_images=10):
+    def pgen(self, num_images=10):
         self.model.eval()
         with torch.no_grad():
-            data_iter = iter(dataloader)
+            data_iter = iter(self.valoader)
             images, _ = next(data_iter)
             images = images[:num_images].to(self.device)
             if self.linear:
                  images = images.view(num_images, -1)
-            recon_images, _, _ = self.model(images)
+            reconstruction_images, _, _ = self.model(images)
             if self.linear:
-                recon_images = recon_images.view(num_images, 1, 28, 28)
-            recon_images = recon_images.cpu()
+                reconstruction_images = reconstruction_images.view(num_images, 1, 28, 28)
+            reconstruction_images = reconstruction_images.cpu()
 
         cols = min(num_images, 5)
         rows = (num_images + cols - 1) // cols
@@ -422,7 +422,7 @@ class net:
             ax1.set_title(f"{i+1}", fontsize=10)
             ax1.axis('off')
 
-            ax2.imshow(recon_images[i].view(28, 28), cmap='gray')
+            ax2.imshow(reconstruction_images[i].view(28, 28), cmap='gray')
             ax2.set_title(f"{i+1}", fontsize=10)
             ax2.axis('off')
 
@@ -445,7 +445,7 @@ class net:
 import sys
 import gc
 import importlib.util
-class ExtractOuts: 
+class GetModelImages: 
     def __init__(self, path, loader, num_images):
         self.path = path
         self.loader = loader
@@ -453,13 +453,13 @@ class ExtractOuts:
         self.model = None
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    def load_output(self):
+    def forward_pass(self):
         with torch.no_grad():
             data_iter = iter(self.loader)
             images, _ = next(data_iter)
             images = images[:self.num_images].to(self.device)
-            recon_images, _, _ = self.model(images)
-            return images.cpu(), recon_images.cpu()
+            reconstruction_images, _, _ = self.model(images)
+            return images.cpu(), reconstruction_images.cpu()
     
     def __enter__(self):
         sys.path.append(self.path)
@@ -474,7 +474,7 @@ class ExtractOuts:
         # self.model.load_state_dict(torch.load(f'{self.path}/saved_model.pth'))
         self.model.eval()
 
-        original, reconstructions = self.load_output()
+        original, reconstructions = self.forward_pass()
         return original, reconstructions
 
     def __exit__(self, exc_type, exc_value, traceback):
