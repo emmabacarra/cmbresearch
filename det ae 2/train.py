@@ -49,8 +49,8 @@ if __name__ == '__main__':
     # using the same data as testing since we are trying to reproduce the images
     print(type(whole_dataset))
 
-# 80-20 train-val split
-n_train = int(0.8*len(whole_dataset))
+# train-val split
+n_train = int(0.9*len(whole_dataset))
 n_val = len(whole_dataset) - n_train
 train_subset, val_subset = random_split(whole_dataset, [n_train, n_val], generator=np.random.seed(0))
 if __name__ == '__main__':
