@@ -71,7 +71,7 @@ img_size = train_subset[0][0].size()[1]*train_subset[0][0].size()[2]
 '''
 
 def loss_function(x, x_hat, mean, log_var, kl_weight=1):
-    reconstruction_loss = nn.functional.binary_cross_entropy(x_hat, x, reduction='mean')
+    reconstruction_loss = nn.functional.binary_cross_entropy(x_hat, x, reduction='sum')
     KLD = - 0.5 * torch.sum(1+ log_var - mean.pow(2) - log_var.exp())
 
     # loss = reconstruction loss + similarity loss (KL divergence)
