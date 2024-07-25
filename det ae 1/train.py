@@ -37,7 +37,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 '''
 ======================================================================================================================================
 '''
-
+stochastic = False  # setting to False makes this deterministic (no sampling) - i.e. a normal autoencoder
 
 # create a transofrm to apply to each datapoint
 transform = transforms.Compose([transforms.ToTensor()])
@@ -84,7 +84,7 @@ model = ConvVAE(
             padding=12,
             latent_dim=16, 
             leak=0.99, drop=0.01,
-            stochastic=False # setting to False makes this deterministic (no sampling) - i.e. a normal autoencoder
+            stochastic=stochastic
         ).to(device)
 nnet = net(model, train_loader, val_loader, batch_size, linear=False);
 
@@ -94,7 +94,7 @@ def get_model():
     return model
 
 if __name__ == '__main__':
-    nnet.train(optimizer=optimizer, lsfn=loss_function, epochs=15, kl_weight=0.1, live_plot=False, outliers=False)
+    nnet.train(optimizer=optimizer, lsfn=loss_function, epochs=15, kl_weight=0 if stochastic else 0.1, live_plot=False, outliers=False)
     # torch.save(nnet.model.state_dict(), 'saved_model.pth')
     nnet.evaluate()
 
