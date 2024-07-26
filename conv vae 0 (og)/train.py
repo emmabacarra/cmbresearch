@@ -27,7 +27,7 @@ from IPython.display import clear_output
 
 from model import ConvVAE
 sys.path.append('..')
-from functions import net
+from functions import experiment
 
 # gpu
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -79,7 +79,7 @@ model = ConvVAE(
             leak=0.99, drop=0.01,
             stochastic=True
         ).to(device)
-nnet = net(model, train_loader, val_loader, batch_size, linear=False);
+nnet = experiment(model, train_loader, val_loader, batch_size, linear=False);
 
 optimizer = Adam(model.parameters(), lr=0.001, weight_decay=1e-10);
 

@@ -67,7 +67,7 @@ def FitsMapper(files, hdul_index, nrows, ncols, cmap, interpolation,
 import torch
 import logging
 
-class net:
+class experiment:
     def __init__(self, model, trloader, valoader, batch_size, linear=True):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = model.to(self.device)
