@@ -22,6 +22,7 @@ det ae 1 (**renamed from conv vae 2 on 7/17/24)
 - excludes outlier losses from first epoch
 - set stochastic = False
 - accuracy ~83.7%
+- kl_weight=0 (b/c deterministic)
 
 det ae 2 
 - duplicated from det ae 1
@@ -29,4 +30,5 @@ det ae 2
 - set stochastic = False
 - lr changed to 1e-4, 150 epochs
 - changed reduction in loss_function from 'sum' to 'mean'
-- accuracy ~83.8%
+- accuracy ~86.5%
+- kl_weight=0 (b/c deterministic)

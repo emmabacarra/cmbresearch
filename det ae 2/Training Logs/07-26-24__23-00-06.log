@@ -1,0 +1,5 @@
+07/26/24 23:00:06 Training initiated with the following parameters:
+Model Parameters: (('image_channels', 1), ('init_channels', 8), ('kernel_size', 14), ('padding', 12), ('latent_dim', 16), ('leak', 0.99), ('drop', 0.01), ('stochastic', False))
+Encoder Parameters: (('image_channels', 1), ('init_channels', 8), ('kernel_size', 14), ('padding', 12), ('latent_dim', 16), ('leak', 0.99), ('drop', 0.01))
+Decoder Parameters: (('image_channels', 1), ('init_channels', 8), ('kernel_size', 14), ('padding', 12), ('latent_dim', 16), ('leak', 0.99), ('drop', 0.01))
+

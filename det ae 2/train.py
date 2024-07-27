@@ -33,11 +33,32 @@ from functions import experiment
 # gpu
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-
 '''
 ======================================================================================================================================
 '''
 
+stochastic = False  # setting to False makes this deterministic (no sampling) - i.e. a normal autoencoder
+batch_size = 100
+train_split_percent = 0.9
+
+image_channels=1  # setting to 1 since the images are grayscale
+init_channels=8
+kernel_size=14
+padding=12
+latent_dim=16 # if deterministic set to 16
+leak=0.99
+drop=0.01
+
+learning_rate = 1e-4
+num_epochs = 500
+kl_weight = 0.1 # =0 if not stochastic else kl_weight
+weight_decay = 1e-10
+
+latent_dims = (0, 1)  # dimensions to plot
+
+'''
+======================================================================================================================================
+'''
 
 # create a transofrm to apply to each datapoint
 transform = transforms.Compose([transforms.ToTensor()])
@@ -50,7 +71,7 @@ if __name__ == '__main__':
     print(type(whole_dataset))
 
 # train-val split
-n_train = int(0.9*len(whole_dataset))
+n_train = int(train_split_percent*len(whole_dataset))
 n_val = len(whole_dataset) - n_train
 train_subset, val_subset = random_split(whole_dataset, [n_train, n_val], generator=np.random.seed(0))
 if __name__ == '__main__':
@@ -58,49 +79,44 @@ if __name__ == '__main__':
     print(f"Image size: {train_subset[0][0].size()}")
 
 # create train and validation/test dataloaders
-batch_size = 100
 train_loader = DataLoader(dataset=train_subset, batch_size=batch_size, shuffle=True)
 val_loader = DataLoader(dataset=val_subset, batch_size=batch_size, shuffle=False)
 
-
 img_size = train_subset[0][0].size()[1]*train_subset[0][0].size()[2] 
-
 
 '''
 ======================================================================================================================================
 '''
 
 def loss_function(x, x_hat, mean, log_var, kl_weight=1):
-    reconstruction_loss = nn.functional.binary_cross_entropy(x_hat, x, reduction='mean')
+    reconstruction_loss = nn.functional.binary_cross_entropy(x_hat, x, reduction='sum')
     KLD = - 0.5 * torch.sum(1+ log_var - mean.pow(2) - log_var.exp())
 
     # loss = reconstruction loss + similarity loss (KL divergence)
-    return reconstruction_loss + kl_weight*KLD, reconstruction_loss, KLD
+    return reconstruction_loss + kl_weight*KLD, reconstruction_loss
 
 model = ConvVAE(
-            image_channels=1,  # setting to 1 since the images are grayscale
-            init_channels=8, 
-            kernel_size=14,
-            padding=12,
-            latent_dim=16, 
-            leak=0.99, drop=0.01,
-            stochastic=False # setting to False makes this deterministic (no sampling) - i.e. a normal autoencoder
+            image_channels=image_channels,  # setting to 1 since the images are grayscale
+            init_channels=init_channels, 
+            kernel_size=kernel_size,
+            padding=padding,
+            latent_dim=latent_dim, 
+            leak=leak, drop=drop,
+            stochastic=stochastic
         ).to(device)
 nnet = experiment(model, train_loader, val_loader, batch_size, linear=False);
 
-optimizer = Adam(model.parameters(), lr=1e-4, weight_decay=1e-10);
+optimizer = Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay);
 
-def get_model():
+def get_model(): # this is for comparison.ipynb
     return model
 
 if __name__ == '__main__':
-    nnet.train(optimizer=optimizer, lsfn=loss_function, epochs=500, kl_weight=0.1, live_plot=False, outliers=False)
+    nnet.train(optimizer=optimizer, lsfn=loss_function, epochs=num_epochs, kl_weight=0 if not stochastic else kl_weight, live_plot=False, outliers=False)
     # torch.save(nnet.model.state_dict(), 'saved_model.pth')
     nnet.evaluate()
 
-    latent_dims = (0, 1)
     print(f"Selected latent dimensions: {latent_dims}")
-
     plt.figure(figsize = (10, 5))
 
     plt.subplot(1, 2, 1)

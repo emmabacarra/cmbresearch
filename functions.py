@@ -155,7 +155,7 @@ class experiment:
                     optimizer.zero_grad()
 
                     outputs, mean, log_var = self.model(batch)
-                    batch_loss, reconstruction_loss, KLD = lsfn(batch, outputs, mean, log_var, kl_weight)
+                    batch_loss, reconstruction_loss = lsfn(batch, outputs, mean, log_var, kl_weight)
                     loss_ct += batch_loss.item()
                     absolute_loss += batch_loss.item()
 
@@ -164,19 +164,14 @@ class experiment:
                     minutes, seconds = divmod(int(elapsed_time), 60)
                     learning_rate = optimizer.param_groups[0]['lr']
 
-                    batch_log = f'({int(minutes)}m {int(seconds):02d}s) | [{epoch}/{epochs}] Batch {i} ({batch_time:.3f}s) | LR: {learning_rate} | KLD: {KLD:.3f}, KLW: {kl_weight}, Rec. Loss: {reconstruction_loss:.3f} | Loss: {batch_loss.item():.2f} | Abs. Loss: {absolute_loss:.2f}'
+                    batch_log = f'({int(minutes)}m {int(seconds):02d}s) | [{epoch}/{epochs}] Batch {i} ({batch_time:.3f}s) | LR: {learning_rate} | KLW: {kl_weight}, Rec. Loss: {reconstruction_loss:.3f} | Loss: {batch_loss.item():.2f} | Abs. Loss: {absolute_loss:.2f}'
                     logger.info(batch_log)
                     batch_times.append(batch_time)
 
                     # ------------------------- Recording Loss ------------------------------------------------------
                     if (i + 1) % view_interval == 0 or i == len(self.trloader) - 1:  # <-- plot for every specified interval of batches (and also account for the last batch)
                         avg_loss = loss_ct / counter
-                        if outliers:
-                            if averaging:
-                                batch_trlosses.append(avg_loss)  # <-- average loss of the interval
-                            else:
-                                batch_trlosses.append(batch_loss.item())
-                        if not outliers and epoch > 1:
+                        if (outliers or (not outliers and epoch > 1)):
                             if averaging:
                                 batch_trlosses.append(avg_loss)  # <-- average loss of the interval
                             else:
@@ -220,7 +215,7 @@ class experiment:
                         batch = batch.to(self.device)
 
                         outputs, mean, log_var = self.model(batch)
-                        batch_loss, reconstruction_loss, KLD = lsfn(batch, outputs, mean, log_var, kl_weight)
+                        batch_loss, reconstruction_loss = lsfn(batch, outputs, mean, log_var, kl_weight)
 
                         tot_valoss += batch_loss.item()
 
@@ -231,7 +226,7 @@ class experiment:
                     minutes, seconds = divmod(int(elapsed_time), 60)
                     learning_rate = optimizer.param_groups[0]['lr']
 
-                    val_log = f'({int(minutes)}m {int(seconds):02d}s) | VALIDATION (Epoch {epoch}/{epochs}) | LR: {learning_rate} | KLD: {KLD:.3f}, KLW: {kl_weight}, Rec. Loss: {reconstruction_loss:.3f} | Loss: {avg_val_loss:.2f} |  Abs. Loss: {absolute_loss:.2f} -----------'
+                    val_log = f'({int(minutes)}m {int(seconds):02d}s) | VALIDATION (Epoch {epoch}/{epochs}) | LR: {learning_rate} | KLW: {kl_weight}, Rec. Loss: {reconstruction_loss:.3f} | Loss: {avg_val_loss:.2f} |  Abs. Loss: {absolute_loss:.2f} -----------'
                     logger.info(val_log)
                 
                 # checkpoint
