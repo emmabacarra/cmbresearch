@@ -27,7 +27,7 @@ import webp
 from IPython.display import clear_output
 
 from model import ConvVAE
-sys.path.append('..')
+sys.path.append('../..')
 from functions import experiment
 
 # gpu
@@ -37,7 +37,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 ======================================================================================================================================
 '''
 
-stochastic = True  # setting to False makes this deterministic (no sampling) - i.e. a normal autoencoder
+stochastic = False  # setting to False makes this deterministic (no sampling) - i.e. a normal autoencoder
 batch_size = 100
 train_split_percent = 0.8
 
@@ -45,13 +45,13 @@ image_channels=1  # setting to 1 since the images are grayscale
 init_channels=8
 kernel_size=14
 padding=12
-latent_dim=16
+latent_dim=16 # if deterministic set to 16
 leak=0.99
 drop=0.01
 
 learning_rate = 0.001
 num_epochs = 15
-kl_weight = 0
+kl_weight = 0.1 # =0 if not stochastic else kl_weight
 weight_decay = 1e-10
 
 latent_dims = (0, 1)  # dimensions to plot
@@ -70,7 +70,7 @@ if __name__ == '__main__':
     # using the same data as testing since we are trying to reproduce the images
     print(type(whole_dataset))
 
-# train-val split
+# 80-20 train-val split
 n_train = int(train_split_percent*len(whole_dataset))
 n_val = len(whole_dataset) - n_train
 train_subset, val_subset = random_split(whole_dataset, [n_train, n_val], generator=np.random.seed(0))

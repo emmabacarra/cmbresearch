@@ -27,7 +27,7 @@ import webp
 from IPython.display import clear_output
 
 from model import ConvVAE
-sys.path.append('..')
+sys.path.append('../..')
 from functions import experiment
 
 # gpu
@@ -45,13 +45,13 @@ image_channels=1  # setting to 1 since the images are grayscale
 init_channels=8
 kernel_size=14
 padding=12
-latent_dim=32
+latent_dim=16
 leak=0.99
 drop=0.01
 
 learning_rate = 0.001
-num_epochs = 15
-kl_weight = 1
+num_epochs = 8
+kl_weight = 0.1
 weight_decay = 1e-10
 
 latent_dims = (0, 1)  # dimensions to plot
