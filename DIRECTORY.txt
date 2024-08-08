@@ -4,7 +4,7 @@ linear vae
 
 
 ================================================================================================
-conv vae og (or conv vae 0) --> vae_0
+conv vae og (or conv vae 0)  -->  vae_0 --> 0-vae
 
 - convolutional, KL weight set to 1
 - reduction in loss function set to 'sum'
@@ -12,7 +12,7 @@ conv vae og (or conv vae 0) --> vae_0
 
 
 ================================================================================================
-conv vae 1 --> vae_0__kl-0p1
+conv vae 1 -->  vae_0__kl-0p1 --> 1-vae__kl.1
 
 - duplicated from conv vae og
 - no architectural changes, adjusted KL weight to 0.1
@@ -20,7 +20,7 @@ conv vae 1 --> vae_0__kl-0p1
 
 
 ================================================================================================
-conv vae 2 (**renamed from conv vae 3 on 7/17/24) --> vae_0__kl-0
+conv vae 2 -->  vae_0__kl-0 --> 2-vae__kl-0
 
 - duplicated from conv vae og
 - set KL weight to 0
@@ -28,7 +28,7 @@ conv vae 2 (**renamed from conv vae 3 on 7/17/24) --> vae_0__kl-0
 
 
 ================================================================================================
-det ae 1 (**renamed from conv vae 2 on 7/17/24) --> ae_0
+det ae 1 (**renamed from conv vae 2 on 7/17/24) --> ae_0 --> 3-ae
 
 - duplicated from conv vae og
 - excludes outlier losses from first epoch
@@ -38,7 +38,7 @@ det ae 1 (**renamed from conv vae 2 on 7/17/24) --> ae_0
 
 
 ================================================================================================
-det ae 2 --> ae_0__lr-1e-4__lsfn-mean
+det ae 2 -->  ae_0__lr-1e-4__lsfn-mean --> 4-ae__lr-1e-4__lsfn-mean
 
 - duplicated from det ae 1
 - excludes outlier losses from first epoch
@@ -47,3 +47,10 @@ det ae 2 --> ae_0__lr-1e-4__lsfn-mean
 - changed reduction in loss_function from 'sum' to 'mean'
 - accuracy ~86.5%
 - kl_weight=0 (b/c deterministic)
+
+
+================================================================================================
+vae_0__stochastic-false --> 5-ae__lr-1e-4__lsfn-std
+
+- copied from 0-vae
+- everything is the same except stochastic = false
