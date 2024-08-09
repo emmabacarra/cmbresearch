@@ -230,20 +230,20 @@ class experiment:
                     logger.info(val_log)
                 
                 # checkpoint
-                os.makedirs('./Checkpoints', exist_ok=True)
-                self.save_checkpoint(epoch, optimizer, path=f'./Checkpoints/{self.timestamp}.pth')
+                # os.makedirs('./Checkpoints', exist_ok=True)  # <-- creates a directory folder checkpoints
+                self.save_checkpoint(epoch, optimizer, path='latest_saved_model.pth')
                 logger.info(f'Checkpoint saved for epoch {epoch}.')
 
             end_time = time.time()
             
         except KeyboardInterrupt:
             logger.warning("Training was interrupted by the user.")
-            self.save_checkpoint(epoch, optimizer, path=f'./Checkpoints/{self.timestamp} interrupted.pth')
+            self.save_checkpoint(epoch, optimizer, path='latest_saved_model.pth')
             logger.info(f'Checkpoint saved for epoch {epoch}.')
 
         except Exception as e:
             logger.error(f"An error has occurred: {e}", exc_info=True)
-            self.save_checkpoint(epoch, optimizer, path=f'./Checkpoints/{self.timestamp} error.pth')
+            self.save_checkpoint(epoch, optimizer, path='latest_saved_model.pth')
             logger.info(f'Checkpoint saved for epoch {epoch}.')
             raise
 
@@ -251,7 +251,7 @@ class experiment:
             try:
                 end_time = time.time()
 
-                torch.save(self.model.state_dict(), 'saved_model.pth')
+                torch.save(self.model.state_dict(), 'latest_saved_model.pth')
                 logger.info(f"Model saved as 'saved_model.pth'.")
 
                 minutes, seconds = divmod(end_time - start_time, 60)
@@ -463,7 +463,7 @@ class GetModelImages:
         spec.loader.exec_module(module)
 
         self.model = module.get_model().to(self.device)
-        self.model.load_state_dict(torch.load(os.path.join(self.path, 'saved_model.pth')))
+        self.model.load_state_dict(torch.load(os.path.join(self.path, 'latest_saved_model.pth')))
         # from train import model as model_class
         # self.model = model_class.to(self.device)
         # self.model.load_state_dict(torch.load(f'{self.path}/saved_model.pth'))

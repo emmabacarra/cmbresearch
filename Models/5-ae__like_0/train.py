@@ -37,7 +37,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 ======================================================================================================================================
 '''
 
-stochastic = True  # setting to False makes this deterministic (no sampling) - i.e. a normal autoencoder
+stochastic = False  # setting to False makes this deterministic (no sampling) - i.e. a normal autoencoder
 batch_size = 100
 train_split_percent = 0.8
 
