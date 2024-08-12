@@ -470,7 +470,7 @@ class GetModelImages:
         self.model.eval()
 
         original, reconstructions = self.forward_pass()
-        return original, reconstructions
+        return original, reconstructions, module.get_epochs()
 
     def __exit__(self, exc_type, exc_value, traceback):
         sys.path.remove(self.path)

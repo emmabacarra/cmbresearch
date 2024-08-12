@@ -56,6 +56,9 @@ weight_decay = 1e-10
 
 latent_dims = (0, 1)  # dimensions to plot
 
+def get_epochs(): # this is for comparison.ipynb
+    return num_epochs
+
 '''
 ======================================================================================================================================
 '''
