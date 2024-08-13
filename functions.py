@@ -233,6 +233,7 @@ class experiment:
                 # os.makedirs('./Checkpoints', exist_ok=True)  # <-- creates a directory folder checkpoints
                 self.save_checkpoint(epoch, optimizer, path='latest_saved_model.pth')
                 logger.info(f'Checkpoint saved for epoch {epoch}.')
+                clear_output(wait=True)
 
             end_time = time.time()
             
