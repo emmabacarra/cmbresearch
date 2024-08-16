@@ -77,7 +77,7 @@ class experiment:
         self.batch_size = batch_size
         self.linear = linear
         
-        self.x_dim = self.trloader.dataset[0][0].size()[1]*self.trloader.dataset[0][0].size()[2]
+        self.x_dim = self.trloader.dataset[0][0].size()[-2]*self.trloader.dataset[0][0].size()[-1]
         self.train_size = len(self.trloader.dataset)
 
     def save_checkpoint(self, epoch, optimizer, path='checkpoint.pth'):
@@ -144,7 +144,8 @@ class experiment:
                 # ========================= training losses =========================
                 self.model.train()
                 loss_ct, counter = 0, 0
-                for i, (batch, _) in enumerate(self.trloader):
+                # for i, (batch, _) in enumerate(self.trloader): # USE FOR MNIST
+                for i, batch in enumerate(self.trloader):
                     batch_start = time.time()
                     counter += 1
 
@@ -208,7 +209,8 @@ class experiment:
                 self.model.eval()
                 with torch.no_grad():
                     tot_valoss = 0
-                    for batch, _ in self.valoader:
+                    # for batch, _ in self.valoader: # USE FOR MNIST
+                    for batch in self.valoader:
 
                         if self.linear:
                             batch = batch.view(self.batch_size, self.x_dim)

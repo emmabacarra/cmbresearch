@@ -29,6 +29,7 @@ from IPython.display import clear_output
 from model import ConvVAE
 sys.path.append('../..')
 from functions import experiment
+from datasets import WMAP
 
 # gpu
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -36,6 +37,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 '''
 ======================================================================================================================================
 '''
+# dataset_path = '../../Local Data Files/MNIST'
+dataset_path = '../../../Local Data Files/WMAP/Datasets/SkymapK1_9yr_res9'
 
 stochastic = True  # setting to False makes this deterministic (no sampling) - i.e. a normal autoencoder
 batch_size = 100
@@ -50,7 +53,7 @@ leak=0.99
 drop=0.01
 
 learning_rate = 0.001
-num_epochs = 15
+num_epochs = 100
 kl_weight = 1
 weight_decay = 1e-10
 
@@ -63,15 +66,18 @@ def get_epochs(): # this is for comparison.ipynb
 ======================================================================================================================================
 '''
 
-# create a transofrm to apply to each datapoint
-transform = transforms.Compose([transforms.ToTensor()])
+if 'MNIST' in dataset_path: # download the MNIST datasets
+    # create a transofrm to apply to each datapoint
+    transform = transforms.Compose([transforms.ToTensor()])
+    whole_dataset = MNIST(dataset_path, transform=transform, download=True)
+    if __name__ == '__main__':
+        # using the same data as testing since we are trying to reproduce the images
+        print(type(whole_dataset))
 
-# download the MNIST datasets
-path = '../../Local Data Files/MNIST'
-whole_dataset = MNIST(path, transform=transform, download=True)
-if __name__ == '__main__':
-    # using the same data as testing since we are trying to reproduce the images
-    print(type(whole_dataset))
+if 'WMAP' in dataset_path: # load the WMAP dataset
+    transform = transforms.Compose([transforms.Normalize((0.5,), (0.5,))])
+    whole_dataset = WMAP(dataset_path, transform=transform)
+    
 
 # train-val split
 n_train = int(train_split_percent*len(whole_dataset))
@@ -85,7 +91,7 @@ if __name__ == '__main__':
 train_loader = DataLoader(dataset=train_subset, batch_size=batch_size, shuffle=True)
 val_loader = DataLoader(dataset=val_subset, batch_size=batch_size, shuffle=False)
 
-img_size = train_subset[0][0].size()[1]*train_subset[0][0].size()[2] 
+img_size = train_subset[0][0].size()[1]*train_subset[0][0].size()[-1] # [-1] instead of [2] to make it applicable to 2D and 3D 
 
 '''
 ======================================================================================================================================
