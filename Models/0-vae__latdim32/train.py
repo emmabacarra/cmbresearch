@@ -9,7 +9,6 @@ from torch.optim import Adam
 import torch.nn.functional as F
 
 # data processing
-from torchvision.datasets import MNIST
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 from torch.utils.data import random_split
@@ -27,7 +26,7 @@ import webp
 from IPython.display import clear_output
 
 from model import ConvVAE
-sys.path.append('../..')
+sys.path.append('../')
 from functions import experiment
 from datasets import WMAP
 
@@ -37,7 +36,6 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 '''
 ======================================================================================================================================
 '''
-# dataset_path = '../../Local Data Files/MNIST'
 dataset_path = '../../../Local Data Files/WMAP/Datasets/SkymapK1_9yr_res9'
 
 stochastic = True  # setting to False makes this deterministic (no sampling) - i.e. a normal autoencoder
@@ -66,19 +64,9 @@ def get_epochs(): # this is for comparison.ipynb
 ======================================================================================================================================
 '''
 
-if 'MNIST' in dataset_path: # download the MNIST datasets
-    # create a transofrm to apply to each datapoint
-    transform = transforms.Compose([transforms.ToTensor()])
-    whole_dataset = MNIST(dataset_path, transform=transform, download=True)
-    if __name__ == '__main__':
-        # using the same data as testing since we are trying to reproduce the images
-        print(type(whole_dataset))
-
-if 'WMAP' in dataset_path: # load the WMAP dataset
-    transform = transforms.Compose([transforms.Normalize((0.5,), (0.5,))])
-    whole_dataset = WMAP(dataset_path, transform=transform)
+transform = transforms.Compose([transforms.Normalize((0.5,), (0.5,))])
+whole_dataset = WMAP(dataset_path, transform=transform)
     
-
 # train-val split
 n_train = int(train_split_percent*len(whole_dataset))
 n_val = len(whole_dataset) - n_train

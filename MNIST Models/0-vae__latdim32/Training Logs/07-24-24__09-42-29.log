@@ -1,0 +1,58 @@
+07/24/24 09:42:29 Training initiated with the following parameters:
+Model Parameters: (('image_channels', 1), ('init_channels', 8), ('kernel_size', 14), ('padding', 12), ('latent_dim', 32), ('leak', 0.99), ('drop', 0.01), ('stochastic', True))
+Encoder Parameters: (('image_channels', 1), ('init_channels', 8), ('kernel_size', 14), ('padding', 12), ('latent_dim', 32), ('leak', 0.99), ('drop', 0.01))
+Decoder Parameters: (('image_channels', 1), ('init_channels', 8), ('kernel_size', 14), ('padding', 12), ('latent_dim', 32), ('leak', 0.99), ('drop', 0.01))
+
+07/24/24 09:42:30 An error has occurred: iteration over a 0-d tensor
+Traceback (most recent call last):
+  File "C:\Users\ebaca\Desktop\CMD Research\CMD Remote Repository\conv vae 0 (og)\..\functions.py", line 158, in train
+    batch_loss, reconstruction_loss, KLD = lsfn(batch, outputs, mean, log_var, kl_weight)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ebaca\anaconda3\envs\Phys417\Lib\site-packages\torch\_tensor.py", line 1047, in __iter__
+    raise TypeError("iteration over a 0-d tensor")
+TypeError: iteration over a 0-d tensor
+07/24/24 09:42:30 Model saved as 'saved_model.pth'.
+07/24/24 09:42:30 
+===========================================================================================
+===========================================================================================
+
+Model Parameters: (('image_channels', 1), ('init_channels', 8), ('kernel_size', 14), ('padding', 12), ('latent_dim', 32), ('leak', 0.99), ('drop', 0.01), ('stochastic', True))
+Encoder Parameters: (('image_channels', 1), ('init_channels', 8), ('kernel_size', 14), ('padding', 12), ('latent_dim', 32), ('leak', 0.99), ('drop', 0.01))
+Decoder Parameters: (('image_channels', 1), ('init_channels', 8), ('kernel_size', 14), ('padding', 12), ('latent_dim', 32), ('leak', 0.99), ('drop', 0.01))
+
+Completed Epochs: 1/15 | Avg Tr.Loss: nan | Absolute Loss: 0.000
+Total Training Time: 0m 01s | Average Batch Time: nans
+07/24/24 09:42:30 An error has occurred: min() arg is an empty sequence
+Traceback (most recent call last):
+  File "C:\Users\ebaca\Desktop\CMD Research\CMD Remote Repository\conv vae 0 (og)\..\functions.py", line 158, in train
+    batch_loss, reconstruction_loss, KLD = lsfn(batch, outputs, mean, log_var, kl_weight)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ebaca\anaconda3\envs\Phys417\Lib\site-packages\torch\_tensor.py", line 1047, in __iter__
+    raise TypeError("iteration over a 0-d tensor")
+TypeError: iteration over a 0-d tensor
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\ebaca\Desktop\CMD Research\CMD Remote Repository\conv vae 0 (og)\..\functions.py", line 251, in train
+    self.save_checkpoint(epoch, optimizer, path=f'./Checkpoints/{self.timestamp} error.pth')
+  File "C:\Users\ebaca\Desktop\CMD Research\CMD Remote Repository\conv vae 0 (og)\..\functions.py", line 89, in save_checkpoint
+    torch.save(state, path)
+  File "C:\Users\ebaca\anaconda3\envs\Phys417\Lib\site-packages\torch\serialization.py", line 627, in save
+    with _open_zipfile_writer(f) as opened_zipfile:
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ebaca\anaconda3\envs\Phys417\Lib\site-packages\torch\serialization.py", line 501, in _open_zipfile_writer
+    return container(name_or_buffer)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ebaca\anaconda3\envs\Phys417\Lib\site-packages\torch\serialization.py", line 472, in __init__
+    super().__init__(torch._C.PyTorchFileWriter(self.name))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Parent directory ./Checkpoints does not exist.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\ebaca\Desktop\CMD Research\CMD Remote Repository\conv vae 0 (og)\..\functions.py", line 280, in train
+    label=f'Training Loss \nLowest: {min(batch_trlosses):.3f} \nAverage: {np.mean(batch_trlosses):.3f} \n',
+                                     ^^^^^^^^^^^^^^^^^^^
+ValueError: min() arg is an empty sequence

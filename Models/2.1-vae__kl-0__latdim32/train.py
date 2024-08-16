@@ -27,8 +27,9 @@ import webp
 from IPython.display import clear_output
 
 from model import ConvVAE
-sys.path.append('../..')
+sys.path.append('../')
 from functions import experiment
+from datasets import WMAP
 
 # gpu
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
