@@ -155,6 +155,9 @@ class experiment:
                     optimizer.zero_grad()
 
                     outputs, mean, log_var = self.model(batch)
+                    # outputs = torch.sigmoid(outputs)  # <-- Sigmoid activation, to change output between 0 and 1 for binary cross entropy
+                    # outputs = torch.clamp(outputs, 0, 1)
+                    batch = batch / 255.0  # <-- Normalize target images if needed
                     batch_loss, reconstruction_loss = lsfn(batch, outputs, mean, log_var, kl_weight)
                     loss_ct += batch_loss.item()
                     absolute_loss += batch_loss.item()
@@ -215,6 +218,9 @@ class experiment:
                         batch = batch.to(self.device)
 
                         outputs, mean, log_var = self.model(batch)
+                        # outputs = torch.sigmoid(outputs)
+                        # outputs = torch.clamp(outputs, 0, 1)
+                        batch = batch / 255.0
                         batch_loss, reconstruction_loss = lsfn(batch, outputs, mean, log_var, kl_weight)
 
                         tot_valoss += batch_loss.item()

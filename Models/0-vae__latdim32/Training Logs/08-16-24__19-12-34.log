@@ -1,0 +1,43 @@
+08/16/24 19:12:34 Training initiated with the following parameters:
+Model Parameters: (('image_channels', 3), ('init_channels', 32), ('kernel_size', 3), ('padding', 1), ('latent_dim', 32), ('leak', 0.99), ('drop', 0.01), ('stochastic', True))
+Encoder Parameters: (('image_channels', 3), ('init_channels', 32), ('kernel_size', 3), ('padding', 1), ('latent_dim', 32), ('leak', 0.99), ('drop', 0.01))
+Decoder Parameters: (('image_channels', 3), ('init_channels', 32), ('kernel_size', 3), ('padding', 1), ('latent_dim', 32), ('leak', 0.99), ('drop', 0.01))
+
+08/16/24 19:12:34 An error has occurred: Using a target size (torch.Size([100, 3, 28, 28])) that is different to the input size (torch.Size([100, 3, 17, 17])) is deprecated. Please ensure they have the same size.
+Traceback (most recent call last):
+  File "C:\Users\ebaca\Desktop\CMB Research\CMB Remote Repository\Models\0-vae__latdim32\..\functions.py", line 160, in train
+    batch_loss, reconstruction_loss = lsfn(batch, outputs, mean, log_var, kl_weight)
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 44, in loss_function
+  File "C:\Users\ebaca\anaconda3\envs\Phys417\Lib\site-packages\torch\nn\functional.py", line 3145, in binary_cross_entropy
+    raise ValueError(
+ValueError: Using a target size (torch.Size([100, 3, 28, 28])) that is different to the input size (torch.Size([100, 3, 17, 17])) is deprecated. Please ensure they have the same size.
+08/16/24 19:12:34 Checkpoint saved for epoch 1.
+08/16/24 19:12:34 Model saved as 'saved_model.pth'.
+08/16/24 19:12:34 
+===========================================================================================
+===========================================================================================
+
+Model Parameters: (('image_channels', 3), ('init_channels', 32), ('kernel_size', 3), ('padding', 1), ('latent_dim', 32), ('leak', 0.99), ('drop', 0.01), ('stochastic', True))
+Encoder Parameters: (('image_channels', 3), ('init_channels', 32), ('kernel_size', 3), ('padding', 1), ('latent_dim', 32), ('leak', 0.99), ('drop', 0.01))
+Decoder Parameters: (('image_channels', 3), ('init_channels', 32), ('kernel_size', 3), ('padding', 1), ('latent_dim', 32), ('leak', 0.99), ('drop', 0.01))
+
+Completed Epochs: 1/100 | Avg Tr.Loss: nan | Absolute Loss: 0.000
+Total Training Time: 0m 00s | Average Batch Time: nans
+08/16/24 19:12:35 An error has occurred: min() arg is an empty sequence
+Traceback (most recent call last):
+  File "C:\Users\ebaca\Desktop\CMB Research\CMB Remote Repository\Models\0-vae__latdim32\..\functions.py", line 160, in train
+    batch_loss, reconstruction_loss = lsfn(batch, outputs, mean, log_var, kl_weight)
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 44, in loss_function
+  File "C:\Users\ebaca\anaconda3\envs\Phys417\Lib\site-packages\torch\nn\functional.py", line 3145, in binary_cross_entropy
+    raise ValueError(
+ValueError: Using a target size (torch.Size([100, 3, 28, 28])) that is different to the input size (torch.Size([100, 3, 17, 17])) is deprecated. Please ensure they have the same size.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\ebaca\Desktop\CMB Research\CMB Remote Repository\Models\0-vae__latdim32\..\functions.py", line 280, in train
+    label=f'Training Loss \nLowest: {min(batch_trlosses):.3f} \nAverage: {np.mean(batch_trlosses):.3f} \n',
+                                     ^^^^^^^^^^^^^^^^^^^
+ValueError: min() arg is an empty sequence

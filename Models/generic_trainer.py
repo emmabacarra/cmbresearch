@@ -17,7 +17,7 @@ from model import ConvVAE
 sys.path.append('../')
 from functions import experiment
 
-''' ASSUMPTION - the following variables are defined in the importing script:
+''' ASSUMPTION - the following variables are defined in the main training script:
 whole_dataset, batch_size, train_split_percent, device, learning_rate, weight_decay, num_epochs, latent_dims, kl_weight, stochastic, etc.'''
 
 transform = transforms.Compose([transforms.Normalize((0.5,), (0.5,))])
@@ -39,6 +39,8 @@ val_loader = DataLoader(dataset=val_subset, batch_size=batch_size, shuffle=False
 img_size = train_subset[0][0].size()[1] * train_subset[0][0].size()[-1]
 
 def loss_function(x, x_hat, mean, log_var, kl_weight=1):
+    x_hat = torch.sigmoid(x_hat) # Sigmoid activation, to change output between 0 and 1 for binary cross entropy
+    x = x / 255.0  # Normalize target images if needed
     reconstruction_loss = nn.functional.binary_cross_entropy(x_hat, x, reduction='sum')
     KLD = -0.5 * torch.sum(1 + log_var - mean.pow(2) - log_var.exp())
     return reconstruction_loss + kl_weight * KLD, reconstruction_loss

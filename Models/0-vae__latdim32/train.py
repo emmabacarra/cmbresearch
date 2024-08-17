@@ -18,7 +18,7 @@ stochastic = True  # setting to False makes this deterministic (no sampling) - i
 batch_size = 100
 train_split_percent = 0.8
 
-image_channels=1  # setting to 1 since the images are grayscale
+image_channels=3  # 1 is grayscale, 3 is RGB
 init_channels=8
 kernel_size=14
 padding=12
@@ -43,5 +43,4 @@ def get_epochs(): # this is for comparison.ipynb
 whole_dataset = WMAP(dataset_path)
 
 # Import and run the generic training script
-from generic_trainer import *
 exec(open('../generic_trainer.py').read())
