@@ -41,7 +41,7 @@ img_size = train_subset[0][0].size()[1] * train_subset[0][0].size()[-1]
 def loss_function(x, x_hat, mean, log_var, kl_weight=1):
     x_hat = torch.sigmoid(x_hat) # Sigmoid activation, to change output between 0 and 1 for binary cross entropy
     x = x / 255.0  # Normalize target images if needed
-    reconstruction_loss = nn.functional.binary_cross_entropy(x_hat, x, reduction='sum')
+    reconstruction_loss = nn.functional.binary_cross_entropy(x_hat, x, reduction='mean')
     KLD = -0.5 * torch.sum(1 + log_var - mean.pow(2) - log_var.exp())
     return reconstruction_loss + kl_weight * KLD, reconstruction_loss
 
