@@ -27,7 +27,7 @@ leak=0.99
 drop=0.01
 
 learning_rate = 0.001
-num_epochs = 100
+num_epochs = 2
 kl_weight = 1
 weight_decay = 1e-10
 

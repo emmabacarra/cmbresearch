@@ -271,6 +271,10 @@ class experiment:
                    f'\nCompleted Epochs: {self.epoch}/{epochs} | Avg Tr.Loss: {np.mean(batch_trlosses):.3f} | Absolute Loss: {absolute_loss:.3f}'
                    f'\nTotal Training Time: {int(minutes)}m {int(seconds):02d}s | Average Batch Time: {np.mean(batch_times):.3f}s'
                 )
+
+                # Filter out infinite values
+                batch_trlosses = [loss for loss in batch_trlosses if np.isfinite(loss)]
+                valosses = [loss for loss in valosses if np.isfinite(loss)]
                 
                 # Final plot to account for all tracked losses in an epoch
                 fig, ax = plt.subplots(figsize=(12, 5))
@@ -306,7 +310,7 @@ class experiment:
         total_pixels = 0
 
         with torch.no_grad():
-            for images, _ in self.valoader:
+            for images in self.valoader:
                 images = images.to(self.device)
                 if self.linear:
                     images = images.view(images.size(0), -1)
@@ -325,7 +329,7 @@ class experiment:
 
     # plot latent space
     def plat(self, latent_dims=(0, 1)):
-        for i, (x, y) in enumerate(self.valoader):
+        for i, x in enumerate(self.valoader):
             if self.linear:
                 x = x.view(x.size(0), -1)
             x = x.to(self.device)
@@ -337,7 +341,7 @@ class experiment:
             else:
                 z_selected = z
         
-            plt.scatter(z_selected[:, 0], z_selected[:, 1], c=y, cmap='tab10')
+            plt.scatter(z_selected[:, 0], z_selected[:, 1]) # no c=[labels] or cmap because not sure yet??
             plt.title(f"2D Latent Space", fontsize = 15, fontweight = 'bold')
             plt.xlabel(f"Dimension {latent_dims[0]}", fontsize = 12)
             plt.ylabel(f"Dimension {latent_dims[1]}", fontsize = 12)
@@ -376,8 +380,18 @@ class experiment:
                 x_hat = self.model.decoder(z)
                 if self.linear:
                     x_hat = x_hat.reshape(28, 28)
+                else:
+                    x_hat = x_hat.squeeze()  # Remove any singleton dimensions
+
                 x_hat = x_hat.to('cpu').detach().numpy()
+                # Convert to single channel if necessary
+                if x_hat.shape[0] == 3:
+                    x_hat = np.dot(x_hat.transpose(1, 2, 0), [0.2989, 0.5870, 0.1140])
+                elif x_hat.shape[0] == 1:
+                    x_hat = x_hat.squeeze(0)  # Remove the channel dimension if it's a single channel
+                
                 img[(n-1-i)*w:(n-1-i+1)*w, j*w:(j+1)*w] = x_hat
+
         plt.title(f"Latent Space Images", fontsize = 15, fontweight = 'bold')
         plt.xlabel(f"Dimension {latent_dims[0]}", fontsize = 12)
         plt.ylabel(f"Dimension {latent_dims[1]}", fontsize = 12)
@@ -390,7 +404,7 @@ class experiment:
         self.model.eval()
         with torch.no_grad():
             data_iter = iter(self.valoader)
-            images, _ = next(data_iter)
+            images = next(data_iter)
             images = images[:num_images].to(self.device)
             if self.linear:
                  images = images.view(num_images, -1)
@@ -420,11 +434,14 @@ class experiment:
             ax1 = fig.add_subplot(gridspec[row, col])
             ax2 = fig.add_subplot(gridspec[row, col + 6])
 
-            ax1.imshow(images[i].view(28, 28).cpu(), cmap='gray')
+            # ax1.imshow(images[i].view(28, 28).cpu(), cmap='gray')
+            # ax2.imshow(reconstruction_images[i].view(28, 28), cmap='gray')
+            ax1.imshow(images[i].permute(1, 2, 0).cpu(), cmap='gray')
+            ax2.imshow(reconstruction_images[i].permute(1, 2, 0), cmap='gray')
+            
             ax1.set_title(f"{i+1}", fontsize=10)
             ax1.axis('off')
 
-            ax2.imshow(reconstruction_images[i].view(28, 28), cmap='gray')
             ax2.set_title(f"{i+1}", fontsize=10)
             ax2.axis('off')
 
