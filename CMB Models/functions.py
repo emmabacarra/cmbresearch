@@ -77,7 +77,7 @@ class experiment:
         self.batch_size = batch_size
         self.linear = linear
         
-        self.x_dim = self.trloader.dataset[0][0].size()[-2]*self.trloader.dataset[0][0].size()[-1]
+        self.x_dim = self.trloader.dataset[0].shape[0]*self.trloader.dataset[0].shape[1]
         self.train_size = len(self.trloader.dataset)
 
     def save_checkpoint(self, epoch, optimizer, path='checkpoint.pth'):
@@ -136,6 +136,7 @@ class experiment:
                     f'\nModel Parameters: {params[0]}'
                     f'\nEncoder Parameters: {params[1]}'
                     f'\nDecoder Parameters: {params[2]}\n')
+        logger.info(f'Train Loader Image Data Size: {self.trloader.dataset[0].shape}')
         
         start_time = time.time()
         try:
@@ -149,7 +150,10 @@ class experiment:
                     counter += 1
 
                     if self.linear:
-                        batch = batch.view(self.batch_size, self.x_dim)
+                        # batch = batch.view(self.batch_size, self.x_dim)
+                        batch = batch.view(batch.size(0), -1)
+                    else:
+                        batch = batch.view(batch.size(0), 1, 28, 28)
                     batch = batch.to(self.device)
 
                     optimizer.zero_grad()
@@ -185,6 +189,10 @@ class experiment:
 
                         # ------------------------- FOR REAL-TIME PLOTTING ------------------------------------------------------
                         if live_plot:  # Plot losses and validation accuracy in real-time
+                            # Filter out infinite values
+                            batch_trlosses = [loss for loss in batch_trlosses if np.isfinite(loss)]
+                            valosses = [loss for loss in valosses if np.isfinite(loss)]
+
                             fig, ax = plt.subplots(figsize=(12, 5))
                             clear_output(wait=True)
                             ax.clear()
@@ -214,7 +222,10 @@ class experiment:
                     for batch in self.valoader:
 
                         if self.linear:
-                            batch = batch.view(self.batch_size, self.x_dim)
+                            # batch = batch.view(self.batch_size, self.x_dim)
+                            batch = batch.view(batch.size(0), -1)
+                        else:
+                            batch = batch.view(batch.size(0), 1, 28, 28)
                         batch = batch.to(self.device)
 
                         outputs, mean, log_var = self.model(batch)
@@ -314,6 +325,8 @@ class experiment:
                 images = images.to(self.device)
                 if self.linear:
                     images = images.view(images.size(0), -1)
+                else:
+                    images = images.view(images.size(0), 1, 28, 28)
                 reconstruction_images, _, _ = self.model(images)
                 reconstruction_images = reconstruction_images.view_as(images)
 
@@ -331,7 +344,10 @@ class experiment:
     def plat(self, latent_dims=(0, 1)):
         for i, x in enumerate(self.valoader):
             if self.linear:
+                # x = x.view(x.size(0), -1)
                 x = x.view(x.size(0), -1)
+            else:
+                x = x.view(x.size(0), 1, 28, 28)
             x = x.to(self.device)
             z, _ = self.model.encoder(x)
             z = z.to('cpu').detach().numpy()
@@ -361,7 +377,7 @@ class experiment:
 
         n = number of images to plot
         '''
-        w = self.valoader.dataset[0][0].size()[1]  # image width
+        w = self.valoader.dataset[0].shape[0]  # image width
         img = np.zeros((n*w, n*w))
         for i, y in enumerate(np.linspace(*rangey, n)):
             for j, x in enumerate(np.linspace(*rangex, n)):
@@ -380,15 +396,17 @@ class experiment:
                 x_hat = self.model.decoder(z)
                 if self.linear:
                     x_hat = x_hat.reshape(28, 28)
-                else:
-                    x_hat = x_hat.squeeze()  # Remove any singleton dimensions
+                # else:
+                #     x_hat = x_hat.squeeze()  # Remove any singleton dimensions (from when using png with rgb channels)
 
                 x_hat = x_hat.to('cpu').detach().numpy()
-                # Convert to single channel if necessary
+                # Convert to single channel if necessary (from when using png with rgb channels)
                 if x_hat.shape[0] == 3:
                     x_hat = np.dot(x_hat.transpose(1, 2, 0), [0.2989, 0.5870, 0.1140])
                 elif x_hat.shape[0] == 1:
                     x_hat = x_hat.squeeze(0)  # Remove the channel dimension if it's a single channel
+                else:
+                    continue
                 
                 img[(n-1-i)*w:(n-1-i+1)*w, j*w:(j+1)*w] = x_hat
 
@@ -407,7 +425,9 @@ class experiment:
             images = next(data_iter)
             images = images[:num_images].to(self.device)
             if self.linear:
-                 images = images.view(num_images, -1)
+                    images = images.view(images.size(0), -1)
+            else:
+                images = images.view(images.size(0), 1, 28, 28)
             reconstruction_images, _, _ = self.model(images)
             if self.linear:
                 reconstruction_images = reconstruction_images.view(num_images, 1, 28, 28)

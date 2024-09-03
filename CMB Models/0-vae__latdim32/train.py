@@ -18,7 +18,7 @@ stochastic = True  # setting to False makes this deterministic (no sampling) - i
 batch_size = 100
 train_split_percent = 0.8
 
-image_channels=3  # 1 is grayscale, 3 is RGB
+image_channels=1  # 1 is grayscale, 3 is RGB
 init_channels=8
 kernel_size=14
 padding=12

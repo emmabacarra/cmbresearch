@@ -34,13 +34,13 @@ train_subset, val_subset = random_split(whole_dataset, [n_train, n_val], generat
 
 if __name__ == '__main__':
     print(f"Train dataset size: {len(train_subset)} | Validation dataset size: {len(val_subset)}")
-    print(f"Image size: {train_subset[0][0].size()}")
+    print(f"Image size: {train_subset[0].shape}")
 
 # create train and validation/test dataloaders
 train_loader = DataLoader(dataset=train_subset, batch_size=batch_size, shuffle=True)
 val_loader = DataLoader(dataset=val_subset, batch_size=batch_size, shuffle=False)
 
-img_size = train_subset[0][0].size()[1] * train_subset[0][0].size()[-1]
+img_size = train_subset[0].shape[0] * train_subset[0].shape[1]
 
 def loss_function(x, x_hat, mean, log_var, kl_weight=1):
     x_hat = torch.sigmoid(x_hat) # Sigmoid activation, to change output between 0 and 1 for binary cross entropy
