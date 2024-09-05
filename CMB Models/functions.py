@@ -544,8 +544,8 @@ class GetModelImages:
 def plot_histograms(crop_files, num_histograms=10, bins=50):
     num_histograms = min(num_histograms, len(crop_files))
 
-    cols = min(num_histograms, 5)
-    rows = (num_histograms + cols - 1) // cols
+    cols = min(num_histograms, 3) * 2  
+    rows = (num_histograms + cols // 2 - 1) // (cols // 2)
 
     fig = plt.figure(figsize=(15, 3 * rows))
     gridspec = fig.add_gridspec(nrows=rows, ncols=cols)
@@ -556,14 +556,20 @@ def plot_histograms(crop_files, num_histograms=10, bins=50):
 
         data_flat = data.flatten()
 
-        row = i // cols
-        col = i % cols
+        row = i // (cols // 2)
+        col_image = (i % (cols // 2)) * 2
+        col_hist = col_image + 1
 
-        ax = fig.add_subplot(gridspec[row, col])
-        ax.hist(data_flat, bins=bins, color='blue', log=True)
-        ax.set_title(f"Histogram {os.path.basename(crop_files[i])}", fontsize=12, fontweight='bold')
-        ax.set_xlabel('Pixel Value')
-        ax.set_ylabel('Frequency')
+        ax_image = fig.add_subplot(gridspec[row, col_image])
+        ax_image.imshow(data, cmap='gray')
+        ax_image.set_title(f"{os.path.basename(crop_files[i])}", fontsize=12, fontweight='bold')
+        ax_image.axis('off')
+
+        ax_hist = fig.add_subplot(gridspec[row, col_hist])
+        ax_hist.hist(data_flat, bins=bins, color='blue', log=True)
+        ax_hist.set_title(f"Histogram", fontsize=12, fontweight='bold')
+        ax_hist.set_xlabel('Pixel Value')
+        ax_hist.set_ylabel('Frequency')
 
     plt.tight_layout(pad=2)
     plt.savefig(f'histograms_of_crops_0-{num_histograms}.png')
