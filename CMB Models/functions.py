@@ -418,6 +418,7 @@ class experiment:
         plt.tight_layout()
         plt.savefig(f"./Latent Space Plots/{self.timestamp}.png")
 
+    # plot generated samples
     def pgen(self, num_images=10):
         self.model.eval()
         with torch.no_grad():
@@ -454,8 +455,6 @@ class experiment:
             ax1 = fig.add_subplot(gridspec[row, col])
             ax2 = fig.add_subplot(gridspec[row, col + 6])
 
-            # ax1.imshow(images[i].view(28, 28).cpu(), cmap='gray')
-            # ax2.imshow(reconstruction_images[i].view(28, 28), cmap='gray')
             ax1.imshow(images[i].permute(1, 2, 0).cpu(), cmap='gray')
             ax2.imshow(reconstruction_images[i].permute(1, 2, 0), cmap='gray')
             
