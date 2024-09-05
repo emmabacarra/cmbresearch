@@ -8,12 +8,20 @@ import time
 from IPython.display import clear_output
 
 
-def FitsMapper(files, hdul_index, nrows, ncols, cmap, interpolation, 
+def FitsMapper(files, hdul_index, nrows, ncols, cmap, interpolation, histogram=False, bins=100,
                 animation=False, interval=None, stretch=None, 
                 vmin=None, vmax=None, contrast=None, bias=None, power=1, percentile=1, time_delay=0.1):
     
     if animation == False:
-        fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(15, 9))
+        total_plots = len(files) * 2  # Each file has an image and a histogram
+        ncols = ncols * 2  # Each file needs two columns (one for the image and one for the histogram)
+        nrows = (total_plots + ncols - 1) // ncols  # Calculate the required number of rows
+
+        if histogram:
+            fig, axs = plt.subplots(nrows, ncols, figsize=(25, 10))  # Adjust the figure size as needed
+        else:
+            fig, axs = plt.subplots(nrows, ncols, figsize=(15, 10))
+        axs = axs.flatten()
 
     for i, file in enumerate(files):
         with fits.open(file) as hdul:
@@ -52,10 +60,16 @@ def FitsMapper(files, hdul_index, nrows, ncols, cmap, interpolation,
             if file != files[-1]:
                 clear_output(wait=True)
         else:
-            ax = axs[i // 3, i % 3]
+            ax = axs[i * 2]
             ax.set_title(search('yr\d+', file).group(), weight='bold', fontsize=17)
             ax.imshow(data, cmap=cmap, norm=norm, interpolation=interpolation)
             ax.axis('off')
+
+            hist_ax = axs[i * 2 + 1]
+            hist_ax.hist(data.flatten(), bins=bins, color='blue', log=True)
+            hist_ax.set_title('Histogram', weight='bold', fontsize=17)
+            hist_ax.set_xlabel('Pixel Value')
+            hist_ax.set_ylabel('Frequency')
     
     if animation == False:
         plt.tight_layout(pad=0, h_pad=0.2, w_pad=0.2)
@@ -522,3 +536,37 @@ class GetModelImages:
         self.model = None
         gc.collect()
         torch.cuda.empty_cache()
+
+
+'''
+------------------------------------------------------------------------------------------------------------------------------------------
+'''
+def plot_histograms(crop_files, num_histograms=10, bins=50):
+    # Ensure the number of histograms does not exceed the number of files
+    num_histograms = min(num_histograms, len(crop_files))
+
+    cols = min(num_histograms, 5)
+    rows = (num_histograms + cols - 1) // cols
+
+    fig = plt.figure(figsize=(15, 3 * rows))
+    gridspec = fig.add_gridspec(nrows=rows, ncols=cols)
+
+    for i in range(num_histograms):
+        print(crop_files[i])
+        data = np.load(crop_files[i])
+
+        # Flatten the data to create a 1D array for the histogram
+        data_flat = data.flatten()
+
+        row = i // cols
+        col = i % cols
+
+        ax = fig.add_subplot(gridspec[row, col])
+        ax.hist(data_flat, bins=bins, color='blue', log=True)
+        ax.set_title(f"Histogram {os.path.basename(crop_files[i])}", fontsize=12, fontweight='bold')
+        ax.set_xlabel('Pixel Value')
+        ax.set_ylabel('Frequency')
+
+    plt.tight_layout(pad=2)
+    plt.savefig(f'histograms_of_crops_0-{num_histograms}.png')
+    print('Finished plotting histograms.')

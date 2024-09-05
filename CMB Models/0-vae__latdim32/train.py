@@ -43,4 +43,12 @@ def get_epochs(): # this is for comparison.ipynb
 whole_dataset = WMAP(dataset_path)
 
 # Import and run the generic training script
-exec(open('../generic_trainer.py').read())
+# exec(open('../generic_trainer.py').read())
+
+import os
+sys.path.append('../')
+from functions import plot_histograms
+
+crop_files = [os.path.join(dataset_path, f) for f in os.listdir(dataset_path)]
+n_histograms = 50
+plot_histograms(crop_files, n_histograms, bins=100)
