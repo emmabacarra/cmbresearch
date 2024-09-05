@@ -542,7 +542,6 @@ class GetModelImages:
 ------------------------------------------------------------------------------------------------------------------------------------------
 '''
 def plot_histograms(crop_files, num_histograms=10, bins=50):
-    # Ensure the number of histograms does not exceed the number of files
     num_histograms = min(num_histograms, len(crop_files))
 
     cols = min(num_histograms, 5)
@@ -555,7 +554,6 @@ def plot_histograms(crop_files, num_histograms=10, bins=50):
         print(crop_files[i])
         data = np.load(crop_files[i])
 
-        # Flatten the data to create a 1D array for the histogram
         data_flat = data.flatten()
 
         row = i // cols

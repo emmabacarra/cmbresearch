@@ -45,6 +45,10 @@ whole_dataset = WMAP(dataset_path)
 # Import and run the generic training script
 # exec(open('../generic_trainer.py').read())
 
+'''
+======================================================================================================================================
+'''
+
 import os
 sys.path.append('../')
 from functions import plot_histograms
