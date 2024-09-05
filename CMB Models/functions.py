@@ -112,7 +112,7 @@ class experiment:
         else:
             raise FileNotFoundError(f"No checkpoint found at '{path}'")
     
-    def train(self, optimizer, lsfn, epochs, kl_weight, live_plot=False, outliers=True, view_interval=100, averaging=True):
+    def train(self, optimizer, lsfn, epochs, kl_weight, save_every_n_epochs=10, live_plot=False, outliers=True, view_interval=100, averaging=True):
         # ========================== Logger Configuration ==========================
         torch.backends.cudnn.benchmark = True
         torch.set_printoptions(profile="full")
@@ -229,6 +229,16 @@ class experiment:
                     batch_loss.backward()
                     optimizer.step()
 
+                if epoch % save_every_n_epochs == 0:
+                    foldername=f'./Checkpoints/{self.timestamp}'
+                    os.makedirs(foldername, exist_ok=True)
+                    
+                    self.save_checkpoint(epoch, optimizer, path=f'{foldername}/epoch_{epoch}_model.pth')
+                    logger.info(f'Checkpoint saved for epoch {epoch}.')
+
+                    self.pgen(num_images=50, filename=f'{foldername}/epoch_{epoch}_samples.png')
+                    logger.info(f'Generated images saved for epoch {epoch}.')
+                
                 # ========================= validation losses =========================
                 self.model.eval()
                 with torch.no_grad():
@@ -276,6 +286,7 @@ class experiment:
         except Exception as e:
             logger.error(f"An error has occurred: {e}", exc_info=True)
             self.save_checkpoint(epoch, optimizer, path='latest_saved_model.pth')
+            self.pgen(num_images=50, filename=f'epoch_{epoch}_samples.png')
             logger.info(f'Checkpoint saved for epoch {epoch}.')
             raise
 
@@ -379,7 +390,6 @@ class experiment:
                 plt.colorbar()
                 break
             plt.tight_layout()
-        plt.show(block=False)
         plt.savefig(f"./Latent Space Plots/{self.timestamp}.png")
     
     # plot reconstructions
@@ -428,12 +438,11 @@ class experiment:
         plt.xlabel(f"Dimension {latent_dims[0]}", fontsize = 12)
         plt.ylabel(f"Dimension {latent_dims[1]}", fontsize = 12)
         plt.imshow(img, extent=[*rangex, *rangey])
-        plt.show(block=False)
         plt.tight_layout()
         plt.savefig(f"./Latent Space Plots/{self.timestamp}.png")
 
     # plot generated samples
-    def pgen(self, num_images=10):
+    def pgen(self, num_images=10, filename='Default'):
         self.model.eval()
         with torch.no_grad():
             data_iter = iter(self.valoader)
@@ -486,8 +495,11 @@ class experiment:
         fig.suptitle(f"Accuracy: {self.accuracy:.3f}", fontsize=20, fontweight='bold', y=1)
 
         plt.tight_layout()
-        plt.savefig(f"./Generated Samples/{self.timestamp}.png")
-        plt.show()
+        if filename == 'Default':
+            plt.savefig(f"./Generated Samples/{self.timestamp}.png")
+        else:
+            plt.savefig(filename)
+       
 
 
 

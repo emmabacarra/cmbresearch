@@ -67,7 +67,9 @@ def get_model():
     return model
 
 if __name__ == '__main__':
-    nnet.train(optimizer=optimizer, lsfn=loss_function, epochs=num_epochs, kl_weight=0 if not stochastic else kl_weight, live_plot=False, outliers=False)
+    nnet.train(optimizer=optimizer, lsfn=loss_function, epochs=num_epochs, 
+               kl_weight=0 if not stochastic else kl_weight, live_plot=False, outliers=False,
+               save_every_n_epochs=save_every_n_epochs)
     nnet.evaluate()
 
     print(f"Selected latent dimensions: {latent_dims}")

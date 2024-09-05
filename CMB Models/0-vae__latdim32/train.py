@@ -27,7 +27,8 @@ leak=0.99
 drop=0.01
 
 learning_rate = 0.001
-num_epochs = 2
+num_epochs = 10000
+save_every_n_epochs = 10
 kl_weight = 1
 weight_decay = 1e-10
 
@@ -43,16 +44,17 @@ def get_epochs(): # this is for comparison.ipynb
 whole_dataset = WMAP(dataset_path)
 
 # Import and run the generic training script
-# exec(open('../generic_trainer.py').read())
+exec(open('../generic_trainer.py').read())
 
 '''
 ======================================================================================================================================
 '''
+# debugging
 
-import os
-sys.path.append('../')
-from functions import plot_histograms
+# import os
+# sys.path.append('../')
+# from functions import plot_histograms
 
-crop_files = [os.path.join(dataset_path, f) for f in os.listdir(dataset_path)]
-n_histograms = 50
-plot_histograms(crop_files, n_histograms, bins=100)
+# crop_files = [os.path.join(dataset_path, f) for f in os.listdir(dataset_path)]
+# n_histograms = 50
+# plot_histograms(crop_files, n_histograms, bins=100)
