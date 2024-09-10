@@ -67,8 +67,9 @@ def get_model():
     return model
 
 if __name__ == '__main__':
-    nnet.train(optimizer=optimizer, lsfn=loss_function, epochs=num_epochs, 
-               kl_weight=0 if not stochastic else kl_weight, live_plot=False, outliers=False,
+    nnet.train(resume_timestamp=resume_timestamp, resume_from_epoch=resume_from_epoch,
+               optimizer=optimizer, lsfn=loss_function, epochs=num_epochs, 
+               kl_weight=0 if not stochastic else kl_weight, outliers=False,
                save_every_n_epochs=save_every_n_epochs)
     nnet.evaluate()
 

@@ -1,0 +1,83 @@
+09/09/24 21:12:21 Training initiated with the following parameters:
+Model Parameters: (('image_channels', 1), ('init_channels', 8), ('kernel_size', 14), ('padding', 12), ('latent_dim', 32), ('leak', 0.99), ('drop', 0.01), ('stochastic', True))
+Encoder Parameters: (('image_channels', 1), ('init_channels', 8), ('kernel_size', 14), ('padding', 12), ('latent_dim', 32), ('leak', 0.99), ('drop', 0.01))
+Decoder Parameters: (('image_channels', 1), ('init_channels', 8), ('kernel_size', 14), ('padding', 12), ('latent_dim', 32), ('leak', 0.99), ('drop', 0.01))
+
+09/09/24 21:12:21 Train Loader Image Data Size: (28, 28)
+09/09/24 21:12:22 (0m 00s) | [1/15] Batch 0 (0.709s) | LR: 0.001 | KLW: 0, Rec. Loss: 0.980 | Loss: 0.98 | Abs. Loss: 0.98
+09/09/24 21:12:23 (0m 01s) | [1/15] Batch 1 (0.006s) | LR: 0.001 | KLW: 0, Rec. Loss: 0.974 | Loss: 0.97 | Abs. Loss: 1.95
+09/09/24 21:12:23 (0m 01s) | [1/15] Batch 2 (0.004s) | LR: 0.001 | KLW: 0, Rec. Loss: 0.940 | Loss: 0.94 | Abs. Loss: 2.89
+09/09/24 21:12:23 (0m 01s) | [1/15] Batch 3 (0.004s) | LR: 0.001 | KLW: 0, Rec. Loss: 0.790 | Loss: 0.79 | Abs. Loss: 3.68
+09/09/24 21:12:23 (0m 01s) | [1/15] Batch 4 (0.004s) | LR: 0.001 | KLW: 0, Rec. Loss: 0.696 | Loss: 0.70 | Abs. Loss: 4.38
+09/09/24 21:12:23 (0m 01s) | [1/15] Batch 5 (0.004s) | LR: 0.001 | KLW: 0, Rec. Loss: 0.693 | Loss: 0.69 | Abs. Loss: 5.07
+09/09/24 21:12:23 (0m 01s) | [1/15] Batch 6 (0.004s) | LR: 0.001 | KLW: 0, Rec. Loss: 0.693 | Loss: 0.69 | Abs. Loss: 5.76
+09/09/24 21:12:23 (0m 01s) | [1/15] Batch 7 (0.004s) | LR: 0.001 | KLW: 0, Rec. Loss: 0.693 | Loss: 0.69 | Abs. Loss: 6.46
+09/09/24 21:12:23 (0m 01s) | [1/15] Batch 8 (0.004s) | LR: 0.001 | KLW: 0, Rec. Loss: 0.693 | Loss: 0.69 | Abs. Loss: 7.15
+09/09/24 21:12:23 (0m 01s) | [1/15] Batch 9 (0.004s) | LR: 0.001 | KLW: 0, Rec. Loss: 0.693 | Loss: 0.69 | Abs. Loss: 7.84
+09/09/24 21:12:23 (0m 01s) | [1/15] Batch 10 (0.004s) | LR: 0.001 | KLW: 0, Rec. Loss: 0.693 | Loss: 0.69 | Abs. Loss: 8.54
+09/09/24 21:12:23 (0m 01s) | [1/15] Batch 11 (0.004s) | LR: 0.001 | KLW: 0, Rec. Loss: 0.693 | Loss: 0.69 | Abs. Loss: 9.23
+09/09/24 21:12:23 (0m 01s) | [1/15] Batch 12 (0.004s) | LR: 0.001 | KLW: 0, Rec. Loss: 0.693 | Loss: 0.69 | Abs. Loss: 9.92
+09/09/24 21:12:23 (0m 01s) | [1/15] Batch 13 (0.004s) | LR: 0.001 | KLW: 0, Rec. Loss: 0.693 | Loss: nan | Abs. Loss: nan
+09/09/24 21:12:24 An error has occurred: CUDA error: device-side assert triggered
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1.
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+Traceback (most recent call last):
+  File "C:\Users\ebaca\Desktop\CMB Research\CMB Remote Repository\CMB Models\2.1-vae__kl-0__latdim32\..\functions.py", line 217, in train
+    loss_ct += batch_loss.item()
+               ^^^^^^^^^^^^^^^^^
+RuntimeError: CUDA error: device-side assert triggered
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1.
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+09/09/24 21:12:24 An error has occurred: CUDA error: device-side assert triggered
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1.
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+Traceback (most recent call last):
+  File "C:\Users\ebaca\Desktop\CMB Research\CMB Remote Repository\CMB Models\2.1-vae__kl-0__latdim32\..\functions.py", line 217, in train
+    loss_ct += batch_loss.item()
+               ^^^^^^^^^^^^^^^^^
+RuntimeError: CUDA error: device-side assert triggered
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1.
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\ebaca\Desktop\CMB Research\CMB Remote Repository\CMB Models\2.1-vae__kl-0__latdim32\..\functions.py", line 308, in train
+    self.save_checkpoint(self.epoch, optimizer, path=f'./Checkpoints/{self.timestamp}/epoch_{self.epoch}_model.pth')
+  File "C:\Users\ebaca\Desktop\CMB Research\CMB Remote Repository\CMB Models\2.1-vae__kl-0__latdim32\..\functions.py", line 103, in save_checkpoint
+    torch.save(state, path)
+  File "C:\Users\ebaca\anaconda3\envs\Phys417\Lib\site-packages\torch\serialization.py", line 627, in save
+    with _open_zipfile_writer(f) as opened_zipfile:
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ebaca\anaconda3\envs\Phys417\Lib\site-packages\torch\serialization.py", line 501, in _open_zipfile_writer
+    return container(name_or_buffer)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ebaca\anaconda3\envs\Phys417\Lib\site-packages\torch\serialization.py", line 472, in __init__
+    super().__init__(torch._C.PyTorchFileWriter(self.name))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Parent directory ./Checkpoints/09-09-24__21-12-21 does not exist.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\ebaca\Desktop\CMB Research\CMB Remote Repository\CMB Models\2.1-vae__kl-0__latdim32\..\functions.py", line 318, in train
+    torch.save(self.model.state_dict(), 'latest_saved_model.pth')
+  File "C:\Users\ebaca\anaconda3\envs\Phys417\Lib\site-packages\torch\serialization.py", line 628, in save
+    _save(obj, opened_zipfile, pickle_module, pickle_protocol, _disable_byteorder_record)
+  File "C:\Users\ebaca\anaconda3\envs\Phys417\Lib\site-packages\torch\serialization.py", line 859, in _save
+    storage = storage.cpu()
+              ^^^^^^^^^^^^^
+  File "C:\Users\ebaca\anaconda3\envs\Phys417\Lib\site-packages\torch\storage.py", line 137, in cpu
+    return torch.UntypedStorage(self.size()).copy_(self, False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: CUDA error: device-side assert triggered
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1.
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+

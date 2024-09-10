@@ -94,11 +94,18 @@ class experiment:
         self.x_dim = self.trloader.dataset[0].shape[0]*self.trloader.dataset[0].shape[1]
         self.train_size = len(self.trloader.dataset)
 
+        self.valosses = []        # <-- per epoch
+        self.batch_trlosses = []  # <-- per batch
+        self.absolute_loss = 0
+
     def save_checkpoint(self, epoch, optimizer, path='checkpoint.pth'):
         state = {
             'epoch': epoch,
             'state_dict': self.model.state_dict(),
-            'optimizer': optimizer.state_dict()
+            'optimizer': optimizer.state_dict(),
+            'absolute_loss': self.absolute_loss,
+            'batch_trlosses': self.batch_trlosses,
+            'valosses': self.valosses
         }
         torch.save(state, path)
 
@@ -108,23 +115,56 @@ class experiment:
             self.model.load_state_dict(checkpoint['state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer'])
             start_epoch = checkpoint['epoch'] + 1
+
+            self.valosses.extend(checkpoint['valosses'])
+            self.batch_trlosses.extend(checkpoint['batch_trlosses'])
+            self.absolute_loss = checkpoint['absolute_loss']
             return start_epoch
         else:
             raise FileNotFoundError(f"No checkpoint found at '{path}'")
     
-    def train(self, optimizer, lsfn, epochs, kl_weight, save_every_n_epochs=10, live_plot=False, outliers=True, view_interval=100, averaging=True):
+    def loss_plot(self, epoch, view_interval, saveto=None):
+        # Filter out infinite values
+        self.batch_trlosses.extend([loss for loss in self.batch_trlosses if np.isfinite(loss)])
+        self.valosses.extend([loss for loss in self.valosses if np.isfinite(loss)])
+
+        fig, ax = plt.subplots(figsize=(12, 5))
+        clear_output(wait=True)
+        ax.clear()
+
+        ax.set_title(f'Performance (Epoch {epoch}/{self.epochs})', weight='bold', fontsize=15)
+        ax.plot(list(range(1, len(self.batch_trlosses) + 1)), self.batch_trlosses,
+                label=f'Training Loss \nLowest: {min(self.batch_trlosses):.3f} \nAverage: {np.mean(self.batch_trlosses):.3f} \n',
+                linewidth=3, color='blue', marker='o', markersize=3)
+        if len(self.valosses) > 0:
+            ax.plot([i * self.batch_ints for i in range(1, len(self.valosses) + 1)], self.valosses,
+                    label=f'Validation Loss \nLowest: {min(self.valosses):.3f} \nAverage: {np.mean(self.valosses):.3f}',
+                    linewidth=3, color='gold', marker='o', markersize=3)
+        ax.set_ylabel("Loss")
+        ax.set_xlabel(f"Batch Intervals (per {view_interval} batches)")
+        ax.set_xlim(1, len(self.batch_trlosses) + 1)
+        ax.legend(bbox_to_anchor=(1, 1), loc='upper right')
+
+        if saveto != None:
+            plt.savefig(saveto, bbox_inches='tight')
+    
+    def train(self, optimizer, lsfn, epochs, kl_weight, save_every_n_epochs=10, live_plot=False, outliers=True, view_interval=100, averaging=True, resume_from_epoch=None, resume_timestamp=None):  
+        
         # ========================== Logger Configuration ==========================
         torch.backends.cudnn.benchmark = True
         torch.set_printoptions(profile="full")
 
-        self.timestamp = time.strftime('%m-%d-%y__%H-%M-%S', time.localtime())
+        if resume_timestamp is not None:
+            self.timestamp = resume_timestamp
+        else:
+            self.timestamp = time.strftime('%m-%d-%y__%H-%M-%S', time.localtime())
 
         logger = logging.getLogger(__name__)
         logger.setLevel(logging.DEBUG)
         formatter = logging.Formatter('%(asctime)s %(message)s', datefmt='%m/%d/%y %H:%M:%S')
 
         # file handler
-        file_handler = logging.FileHandler(f'./Training Logs/{self.timestamp}.log')
+        file_handler = logging.FileHandler(f'./Training Logs/{self.timestamp}.log', mode='a')
         file_handler.setLevel(logging.INFO)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
@@ -136,12 +176,16 @@ class experiment:
         logger.addHandler(console_handler)
 
         # ---------------------------------------------------------------------------
-        valosses = []  # <-- per epoch
-        batch_trlosses = []  # <-- per batch
-        batch_ints = self.train_size / (self.batch_size * view_interval)
+        self.batch_ints = self.train_size / (self.batch_size * view_interval)
         batch_times = []
-        absolute_loss = 0
         self.epoch = 0
+        self.epochs = epochs
+        start_epoch = 1
+
+        if resume_from_epoch is not None:
+            logger.info(f"Resuming training from checkpoint: {resume_from_epoch}.")
+            start_epoch = self.load_checkpoint(optimizer, path=f'./Checkpoints/{resume_timestamp}/epoch_{resume_from_epoch}_model.pth')
+            logger.info(f"Resumed from epoch {start_epoch}.")
 
         params = [tuple(self.model.params().items()),
                   tuple(self.model.encoder.params().items()),
@@ -154,8 +198,12 @@ class experiment:
         
         start_time = time.time()
         try:
-            for epoch in range(1, epochs + 1):
+            foldername=f'./Checkpoints/{self.timestamp}'
+            os.makedirs(foldername, exist_ok=True)
+
+            for epoch in range(start_epoch, epochs + 1):
                 self.epoch = epoch
+
                 # ========================= training losses =========================
                 self.model.train()
                 loss_ct, counter = 0, 0
@@ -178,68 +226,38 @@ class experiment:
                     # batch = batch / 255.0  # <-- Normalize target images if needed
                     batch_loss, reconstruction_loss = lsfn(batch, outputs, mean, log_var, kl_weight)
                     loss_ct += batch_loss.item()
-                    absolute_loss += batch_loss.item()
+                    self.absolute_loss += batch_loss.item()
 
                     batch_time = time.time() - batch_start
                     elapsed_time = time.time() - start_time
                     minutes, seconds = divmod(int(elapsed_time), 60)
                     learning_rate = optimizer.param_groups[0]['lr']
 
-                    batch_log = f'({int(minutes)}m {int(seconds):02d}s) | [{epoch}/{epochs}] Batch {i} ({batch_time:.3f}s) | LR: {learning_rate} | KLW: {kl_weight}, Rec. Loss: {reconstruction_loss:.3f} | Loss: {batch_loss.item():.2f} | Abs. Loss: {absolute_loss:.2f}'
+                    batch_log = f'({int(minutes)}m {int(seconds):02d}s) | [{self.epoch}/{epochs}] Batch {i} ({batch_time:.3f}s) | LR: {learning_rate} | KLW: {kl_weight}, Rec. Loss: {reconstruction_loss:.3f} | Loss: {batch_loss.item():.4f} | Abs. Loss: {self.absolute_loss:.2f}'
                     logger.info(batch_log)
                     batch_times.append(batch_time)
 
-                    # ------------------------- Recording Loss ------------------------------------------------------
+                    # ---------- Recording Loss ----------
                     if (i + 1) % view_interval == 0 or i == len(self.trloader) - 1:  # <-- plot for every specified interval of batches (and also account for the last batch)
                         avg_loss = loss_ct / counter
-                        if (outliers or (not outliers and epoch > 1)):
+                        if (outliers or (not outliers and self.epoch > 1)):
                             if averaging:
-                                batch_trlosses.append(avg_loss)  # <-- average loss of the interval
+                                self.batch_trlosses.append(avg_loss)  # <-- average loss of the interval
                             else:
-                                batch_trlosses.append(batch_loss.item())
+                                self.batch_trlosses.append(batch_loss.item())
                         else:
                             continue
                         loss_ct, counter = 0, 0  # reset for next interval
 
-                        # ------------------------- FOR REAL-TIME PLOTTING ------------------------------------------------------
+                        # FOR REAL-TIME PLOTTING -----------
                         if live_plot:  # Plot losses and validation accuracy in real-time
-                            # Filter out infinite values
-                            batch_trlosses = [loss for loss in batch_trlosses if np.isfinite(loss)]
-                            valosses = [loss for loss in valosses if np.isfinite(loss)]
-
-                            fig, ax = plt.subplots(figsize=(12, 5))
-                            clear_output(wait=True)
-                            ax.clear()
-
-                            ax.set_title(f'Performance (Epoch {epoch}/{epochs})', weight='bold', fontsize=15)
-                            ax.plot(list(range(1, len(batch_trlosses) + 1)), batch_trlosses,
-                                    label=f'Training Loss \nLowest: {min(batch_trlosses):.3f} \nAverage: {np.mean(batch_trlosses):.3f} \n',
-                                    linewidth=3, color='blue', marker='o', markersize=3)
-                            if len(valosses) > 0:
-                                ax.plot([i * batch_ints for i in range(1, len(valosses) + 1)], valosses,
-                                        label=f'Validation Loss \nLowest: {min(valosses):.3f} \nAverage: {np.mean(valosses):.3f}',
-                                        linewidth=3, color='gold', marker='o', markersize=3)
-                            ax.set_ylabel("Loss")
-                            ax.set_xlabel(f"Batch Intervals (per {view_interval} batches)")
-                            ax.set_xlim(1, len(batch_trlosses) + 1)
-                            ax.legend(title=f'Absolute loss: {round(absolute_loss, 3)}', bbox_to_anchor=(1, 1), loc='upper right')
-
-                            plt.show(block=False)
-                    # -------------------------------------------------------------------------------
+                            self.loss_plot(self.epoch, view_interval) # absolute_loss
+                            
                     batch_loss.backward()
                     optimizer.step()
-
-                if epoch % save_every_n_epochs == 0:
-                    foldername=f'./Checkpoints/{self.timestamp}'
-                    os.makedirs(foldername, exist_ok=True)
-                    
-                    self.save_checkpoint(epoch, optimizer, path=f'{foldername}/epoch_{epoch}_model.pth')
-                    logger.info(f'Checkpoint saved for epoch {epoch}.')
-
-                    self.pgen(num_images=50, filename=f'{foldername}/epoch_{epoch}_samples.png')
-                    logger.info(f'Generated images saved for epoch {epoch}.')
                 
                 # ========================= validation losses =========================
+                logger.info(f'Calculating validation for epoch {self.epoch}.')
                 self.model.eval()
                 with torch.no_grad():
                     tot_valoss = 0
@@ -261,33 +279,44 @@ class experiment:
                         tot_valoss += batch_loss.item()
 
                     avg_val_loss = tot_valoss / len(self.valoader)
-                    valosses.append(avg_val_loss)
+                    self.valosses.append(avg_val_loss)
 
                     elapsed_time = time.time() - start_time
                     minutes, seconds = divmod(int(elapsed_time), 60)
                     learning_rate = optimizer.param_groups[0]['lr']
 
-                    val_log = f'({int(minutes)}m {int(seconds):02d}s) | VALIDATION (Epoch {epoch}/{epochs}) | LR: {learning_rate} | KLW: {kl_weight}, Rec. Loss: {reconstruction_loss:.3f} | Loss: {avg_val_loss:.2f} |  Abs. Loss: {absolute_loss:.2f} -----------'
+                    val_log = f'({int(minutes)}m {int(seconds):02d}s) | VALIDATION (Epoch {self.epoch}/{epochs}) | LR: {learning_rate} | KLW: {kl_weight}, Rec. Loss: {reconstruction_loss:.3f} | Loss: {avg_val_loss:.4f} |  Abs. Loss: {self.absolute_loss:.2f} -----------'
                     logger.info(val_log)
                 
-                # checkpoint
-                # os.makedirs('./Checkpoints', exist_ok=True)  # <-- creates a directory folder checkpoints
-                self.save_checkpoint(epoch, optimizer, path='latest_saved_model.pth')
-                logger.info(f'Checkpoint saved for epoch {epoch}.')
-                clear_output(wait=True)
+                
+                # ========================= Progress Checkpoints =========================
+                if self.epoch % save_every_n_epochs == 0:
+                    self.save_checkpoint(self.epoch, optimizer, path=f'{foldername}/epoch_{self.epoch}_model.pth')
+                    logger.info(f'Checkpoint saved for epoch {self.epoch}.')
 
+                    self.loss_plot(self.epoch, view_interval,
+                                   saveto=f"{foldername}/epoch_{self.epoch}_loss.png") # absolute_loss
+                    logger.info(f'Loss plot saved for epoch {self.epoch}.')
+
+                    self.evaluate()
+                    self.pgen(num_images=50, filename=f'{foldername}/epoch_{self.epoch}_samples.png')
+                    logger.info(f'Generated images saved for epoch {self.epoch}.')
+                
+
+                clear_output(wait=True)
             end_time = time.time()
             
         except KeyboardInterrupt:
             logger.warning("Training was interrupted by the user.")
-            self.save_checkpoint(epoch, optimizer, path='latest_saved_model.pth')
-            logger.info(f'Checkpoint saved for epoch {epoch}.')
+            self.save_checkpoint(self.epoch, optimizer, path=f'./Checkpoints/{self.timestamp}/epoch_{self.epoch}_model.pth')
+            logger.info(f'Checkpoint saved for epoch {self.epoch}.')
 
         except Exception as e:
             logger.error(f"An error has occurred: {e}", exc_info=True)
-            self.save_checkpoint(epoch, optimizer, path='latest_saved_model.pth')
-            self.pgen(num_images=50, filename=f'epoch_{epoch}_samples.png')
-            logger.info(f'Checkpoint saved for epoch {epoch}.')
+            self.save_checkpoint(self.epoch, optimizer, path=f'./Checkpoints/{self.timestamp}/epoch_{self.epoch}_model.pth')
+            self.evaluate()
+            self.pgen(num_images=50, filename=f'epoch_{self.epoch}_samples.png')
+            logger.info(f'Checkpoint saved for epoch {self.epoch}.')
             raise
 
         finally:
@@ -304,40 +333,18 @@ class experiment:
                    f'\nModel Parameters: {params[0]}'
                    f'\nEncoder Parameters: {params[1]}'
                    f'\nDecoder Parameters: {params[2]}\n'
-                   f'\nCompleted Epochs: {self.epoch}/{epochs} | Avg Tr.Loss: {np.mean(batch_trlosses):.3f} | Absolute Loss: {absolute_loss:.3f}'
+                   f'\nCompleted Epochs: {self.epoch}/{epochs} | Avg Tr.Loss: {np.mean(self.batch_trlosses):.3f} | Absolute Loss: {self.absolute_loss:.3f}'
                    f'\nTotal Training Time: {int(minutes)}m {int(seconds):02d}s | Average Batch Time: {np.mean(batch_times):.3f}s'
                 )
 
-                # Filter out infinite values
-                batch_trlosses = [loss for loss in batch_trlosses if np.isfinite(loss)]
-                valosses = [loss for loss in valosses if np.isfinite(loss)]
-                
-                # Final plot to account for all tracked losses in an epoch
-                fig, ax = plt.subplots(figsize=(12, 5))
-                clear_output(wait=True)
-                ax.clear()
-
-                ax.set_title(f'Performance (Epoch {self.epoch}/{epochs})', weight='bold', fontsize=15)
-                ax.plot(list(range(1, len(batch_trlosses) + 1)), batch_trlosses,
-                        label=f'Training Loss \nLowest: {min(batch_trlosses):.3f} \nAverage: {np.mean(batch_trlosses):.3f} \n',
-                        linewidth=3, color='blue', marker='o', markersize=3)
-                if len(valosses) > 0:
-                    ax.plot([i * batch_ints for i in range(1, len(valosses) + 1)], valosses,
-                            label=f'Validation Loss \nLowest: {min(valosses):.3f} \nAverage: {np.mean(valosses):.3f}',
-                            linewidth=3, color='gold', marker='o', markersize=3)
-                ax.set_ylabel("Loss")
-                ax.set_xlabel(f"Batch Intervals (per {view_interval} batches)")
-                ax.set_xlim(1, len(batch_trlosses) + 1)
-                ax.legend(title=f'Absolute loss: {round(absolute_loss, 3)}', bbox_to_anchor=(1, 1), loc='upper right')
-
-                plt.show(block=False)
-                plt.savefig(f"./Loss Plots/{self.timestamp}.png", bbox_inches='tight')
+                self.loss_plot(self.epoch, view_interval,
+                               saveto=f"./Loss Plots/{self.timestamp}.png") # absolute_loss
 
             except Exception as e:
                 logger.error(f"An error has occurred: {e}", exc_info=True)
                 raise
 
-        return absolute_loss
+        return self.absolute_loss
 
 
     def evaluate(self, threshold=0.1):

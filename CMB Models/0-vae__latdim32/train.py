@@ -26,7 +26,7 @@ latent_dim=32
 leak=0.99
 drop=0.01
 
-learning_rate = 0.001
+learning_rate = 1e-6
 num_epochs = 10000
 save_every_n_epochs = 10
 kl_weight = 1
@@ -44,6 +44,8 @@ def get_epochs(): # this is for comparison.ipynb
 whole_dataset = WMAP(dataset_path)
 
 # Import and run the generic training script
+resume_timestamp = '09-10-24__10-34-53'     # example: '09-05-24__16-24-24'
+resume_from_epoch = 1    # None if training from scratch/restarting
 exec(open('../generic_trainer.py').read())
 
 '''
