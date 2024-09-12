@@ -42,17 +42,20 @@ val_loader = DataLoader(dataset=val_subset, batch_size=batch_size, shuffle=False
 
 img_size = train_subset[0].shape[0] * train_subset[0].shape[1]
 
-def loss_function(x, x_hat, mean, log_var, kl_weight=1):
+def loss_function(x, x_hat, mean, log_var, kl_weight=1, anneal=False, epoch=None):
     x_hat = torch.sigmoid(x_hat) # Sigmoid activation, to change output between 0 and 1 for binary cross entropy
     x = x / 255.0  # Normalize target images if needed
     reconstruction_loss = nn.functional.binary_cross_entropy(x_hat, x, reduction='mean')
     KLD = -0.5 * torch.sum(1 + log_var - mean.pow(2) - log_var.exp())
-    return reconstruction_loss + kl_weight * KLD, reconstruction_loss
+    if anneal:
+        kl_weight = min(1.0, epoch / 100)
+    return reconstruction_loss + kl_weight * KLD, reconstruction_loss, kl_weight
 
 model = ConvVAE(
     image_channels=image_channels,  # setting to 1 since the images are grayscale
     init_channels=init_channels,
     kernel_size=kernel_size,
+    stride=stride,
     padding=padding,
     latent_dim=latent_dim,
     leak=leak,
@@ -68,7 +71,7 @@ def get_model():
 
 if __name__ == '__main__':
     nnet.train(resume_timestamp=resume_timestamp, resume_from_epoch=resume_from_epoch,
-               optimizer=optimizer, lsfn=loss_function, epochs=num_epochs, 
+               optimizer=optimizer, lsfn=loss_function, anneal=anneal, epochs=num_epochs, 
                kl_weight=0 if not stochastic else kl_weight, outliers=False,
                save_every_n_epochs=save_every_n_epochs)
     nnet.evaluate()

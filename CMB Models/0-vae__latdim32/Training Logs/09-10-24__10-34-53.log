@@ -30293,3 +30293,66 @@ Decoder Parameters: (('image_channels', 1), ('init_channels', 8), ('kernel_size'
 
 Completed Epochs: 11/10000 | Avg Tr.Loss: 10.006 | Absolute Loss: 157832.791
 Total Training Time: 10m 56s | Average Batch Time: 0.004s
+09/10/24 13:20:21 Resuming training from checkpoint: 1.
+09/10/24 13:20:21 Resumed from epoch 2.
+09/10/24 13:20:21 Training initiated with the following parameters:
+Model Parameters: (('image_channels', 1), ('init_channels', 8), ('kernel_size', 14), ('padding', 12), ('latent_dim', 32), ('leak', 0.99), ('drop', 0.01), ('stochastic', True))
+Encoder Parameters: (('image_channels', 1), ('init_channels', 8), ('kernel_size', 14), ('padding', 12), ('latent_dim', 32), ('leak', 0.99), ('drop', 0.01))
+Decoder Parameters: (('image_channels', 1), ('init_channels', 8), ('kernel_size', 14), ('padding', 12), ('latent_dim', 32), ('leak', 0.99), ('drop', 0.01))
+
+09/10/24 13:20:21 Train Loader Image Data Size: (28, 28)
+09/10/24 13:20:23 (0m 01s) | [2/10000] Batch 0 (0.730s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 10.0261 | Abs. Loss: 8356.97
+09/10/24 13:20:24 (0m 02s) | [2/10000] Batch 1 (0.006s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 9.9891 | Abs. Loss: 8366.96
+09/10/24 13:20:24 (0m 02s) | [2/10000] Batch 2 (0.005s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 9.9920 | Abs. Loss: 8376.96
+09/10/24 13:20:24 (0m 03s) | [2/10000] Batch 3 (0.004s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 10.0179 | Abs. Loss: 8386.97
+09/10/24 13:20:25 (0m 03s) | [2/10000] Batch 4 (0.005s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 10.0261 | Abs. Loss: 8397.00
+09/10/24 13:20:25 (0m 03s) | [2/10000] Batch 5 (0.005s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 10.0017 | Abs. Loss: 8407.00
+09/10/24 13:20:25 (0m 04s) | [2/10000] Batch 6 (0.005s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 10.0040 | Abs. Loss: 8417.01
+09/10/24 13:20:26 (0m 04s) | [2/10000] Batch 7 (0.005s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 10.0219 | Abs. Loss: 8427.03
+09/10/24 13:20:26 (0m 04s) | [2/10000] Batch 8 (0.004s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 10.0080 | Abs. Loss: 8437.04
+09/10/24 13:20:27 (0m 05s) | [2/10000] Batch 9 (0.005s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 9.9987 | Abs. Loss: 8447.03
+09/10/24 13:20:27 (0m 05s) | [2/10000] Batch 10 (0.005s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 10.0172 | Abs. Loss: 8457.05
+09/10/24 13:20:27 (0m 06s) | [2/10000] Batch 11 (0.005s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 9.9952 | Abs. Loss: 8467.05
+09/10/24 13:20:28 (0m 06s) | [2/10000] Batch 12 (0.004s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 10.0136 | Abs. Loss: 8477.06
+09/10/24 13:20:28 (0m 06s) | [2/10000] Batch 13 (0.021s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 10.0049 | Abs. Loss: 8487.07
+09/10/24 13:20:28 (0m 07s) | [2/10000] Batch 14 (0.021s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 10.0213 | Abs. Loss: 8497.09
+09/10/24 13:20:29 (0m 07s) | [2/10000] Batch 15 (0.022s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 9.9873 | Abs. Loss: 8507.07
+09/10/24 13:20:29 (0m 07s) | [2/10000] Batch 16 (0.022s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 10.0091 | Abs. Loss: 8517.08
+09/10/24 13:20:30 (0m 08s) | [2/10000] Batch 17 (0.052s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 10.0072 | Abs. Loss: 8527.09
+09/10/24 13:20:30 (0m 08s) | [2/10000] Batch 18 (0.051s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 9.9861 | Abs. Loss: 8537.08
+09/10/24 13:20:31 (0m 09s) | [2/10000] Batch 19 (0.021s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.967 | Loss: 9.9788 | Abs. Loss: 8547.06
+09/10/24 13:20:31 (0m 09s) | [2/10000] Batch 20 (0.021s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 10.0053 | Abs. Loss: 8557.06
+09/10/24 13:20:31 (0m 10s) | [2/10000] Batch 21 (0.021s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 10.0108 | Abs. Loss: 8567.07
+09/10/24 13:20:32 (0m 10s) | [2/10000] Batch 22 (0.021s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 10.0013 | Abs. Loss: 8577.07
+09/10/24 13:20:32 (0m 10s) | [2/10000] Batch 23 (0.051s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 10.0022 | Abs. Loss: 8587.07
+09/10/24 13:20:33 (0m 11s) | [2/10000] Batch 24 (0.021s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 10.0088 | Abs. Loss: 8597.08
+09/10/24 13:20:33 (0m 11s) | [2/10000] Batch 25 (0.021s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 10.0406 | Abs. Loss: 8607.12
+09/10/24 13:20:33 (0m 11s) | [2/10000] Batch 26 (0.020s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 10.0312 | Abs. Loss: 8617.16
+09/10/24 13:20:34 (0m 12s) | [2/10000] Batch 27 (0.021s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 9.9963 | Abs. Loss: 8627.15
+09/10/24 13:20:34 (0m 12s) | [2/10000] Batch 28 (0.021s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 9.9870 | Abs. Loss: 8637.14
+09/10/24 13:20:34 (0m 13s) | [2/10000] Batch 29 (0.021s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 10.0138 | Abs. Loss: 8647.15
+09/10/24 13:20:35 (0m 13s) | [2/10000] Batch 30 (0.027s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.967 | Loss: 9.9773 | Abs. Loss: 8657.13
+09/10/24 13:20:36 (0m 14s) | [2/10000] Batch 31 (0.022s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 10.0050 | Abs. Loss: 8667.13
+09/10/24 13:20:37 (0m 15s) | [2/10000] Batch 32 (0.021s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 9.9941 | Abs. Loss: 8677.13
+09/10/24 13:20:37 (0m 15s) | [2/10000] Batch 33 (0.051s) | LR: 1e-10 | KLW: 1, Rec. Loss: 0.968 | Loss: 10.0165 | Abs. Loss: 8687.15
+09/10/24 13:20:37 Training was interrupted by the user.
+09/10/24 13:20:37 Checkpoint saved for epoch 2.
+09/10/24 13:20:37 Model saved as 'saved_model.pth'.
+09/10/24 13:20:37 
+===========================================================================================
+===========================================================================================
+
+Model Parameters: (('image_channels', 1), ('init_channels', 8), ('kernel_size', 14), ('padding', 12), ('latent_dim', 32), ('leak', 0.99), ('drop', 0.01), ('stochastic', True))
+Encoder Parameters: (('image_channels', 1), ('init_channels', 8), ('kernel_size', 14), ('padding', 12), ('latent_dim', 32), ('leak', 0.99), ('drop', 0.01))
+Decoder Parameters: (('image_channels', 1), ('init_channels', 8), ('kernel_size', 14), ('padding', 12), ('latent_dim', 32), ('leak', 0.99), ('drop', 0.01))
+
+Completed Epochs: 2/10000 | Avg Tr.Loss: nan | Absolute Loss: 8687.145
+Total Training Time: 0m 15s | Average Batch Time: 0.040s
+09/10/24 13:20:37 An error has occurred: min() arg is an empty sequence
+Traceback (most recent call last):
+  File "C:\Users\ebaca\Desktop\CMB Research\CMB Remote Repository\CMB Models\0-vae__latdim32\..\functions.py", line 340, in train
+    self.loss_plot(self.epoch, view_interval,
+  File "C:\Users\ebaca\Desktop\CMB Research\CMB Remote Repository\CMB Models\0-vae__latdim32\..\functions.py", line 137, in loss_plot
+    label=f'Training Loss \nLowest: {min(self.batch_trlosses):.3f} \nAverage: {np.mean(self.batch_trlosses):.3f} \n',
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: min() arg is an empty sequence

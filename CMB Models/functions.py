@@ -148,7 +148,8 @@ class experiment:
         if saveto != None:
             plt.savefig(saveto, bbox_inches='tight')
     
-    def train(self, optimizer, lsfn, epochs, kl_weight, save_every_n_epochs=10, live_plot=False, outliers=True, view_interval=100, averaging=True, resume_from_epoch=None, resume_timestamp=None):  
+    def train(self, optimizer, lsfn, epochs, kl_weight, save_every_n_epochs=10, live_plot=False, outliers=True, 
+              view_interval=100, averaging=True, resume_from_epoch=None, resume_timestamp=None, anneal=False):  
         
         # ========================== Logger Configuration ==========================
         torch.backends.cudnn.benchmark = True
@@ -224,7 +225,7 @@ class experiment:
                     # outputs = torch.sigmoid(outputs)  # <-- Sigmoid activation, to change output between 0 and 1 for binary cross entropy
                     # outputs = torch.clamp(outputs, 0, 1)
                     # batch = batch / 255.0  # <-- Normalize target images if needed
-                    batch_loss, reconstruction_loss = lsfn(batch, outputs, mean, log_var, kl_weight)
+                    batch_loss, reconstruction_loss, klw = lsfn(batch, outputs, mean, log_var, kl_weight, anneal, epoch)
                     loss_ct += batch_loss.item()
                     self.absolute_loss += batch_loss.item()
 
@@ -233,7 +234,7 @@ class experiment:
                     minutes, seconds = divmod(int(elapsed_time), 60)
                     learning_rate = optimizer.param_groups[0]['lr']
 
-                    batch_log = f'({int(minutes)}m {int(seconds):02d}s) | [{self.epoch}/{epochs}] Batch {i} ({batch_time:.3f}s) | LR: {learning_rate} | KLW: {kl_weight}, Rec. Loss: {reconstruction_loss:.3f} | Loss: {batch_loss.item():.4f} | Abs. Loss: {self.absolute_loss:.2f}'
+                    batch_log = f'({int(minutes)}m {int(seconds):02d}s) | [{self.epoch}/{epochs}] Batch {i} ({batch_time:.3f}s) | LR: {learning_rate} | KLW: {klw}, Rec. Loss: {reconstruction_loss:.3f} | Loss: {batch_loss.item():.6f} | Abs. Loss: {self.absolute_loss:.2f}'
                     logger.info(batch_log)
                     batch_times.append(batch_time)
 
@@ -274,7 +275,7 @@ class experiment:
                         # outputs = torch.sigmoid(outputs)
                         # outputs = torch.clamp(outputs, 0, 1)
                         batch = batch / 255.0
-                        batch_loss, reconstruction_loss = lsfn(batch, outputs, mean, log_var, kl_weight)
+                        batch_loss, reconstruction_loss, klw = lsfn(batch, outputs, mean, log_var, kl_weight, anneal, epoch)
 
                         tot_valoss += batch_loss.item()
 
@@ -285,7 +286,7 @@ class experiment:
                     minutes, seconds = divmod(int(elapsed_time), 60)
                     learning_rate = optimizer.param_groups[0]['lr']
 
-                    val_log = f'({int(minutes)}m {int(seconds):02d}s) | VALIDATION (Epoch {self.epoch}/{epochs}) | LR: {learning_rate} | KLW: {kl_weight}, Rec. Loss: {reconstruction_loss:.3f} | Loss: {avg_val_loss:.4f} |  Abs. Loss: {self.absolute_loss:.2f} -----------'
+                    val_log = f'({int(minutes)}m {int(seconds):02d}s) | VALIDATION (Epoch {self.epoch}/{epochs}) | LR: {learning_rate} | KLW: {klw}, Rec. Loss: {reconstruction_loss:.3f} | Loss: {avg_val_loss:.6f} |  Abs. Loss: {self.absolute_loss:.2f} -----------'
                     logger.info(val_log)
                 
                 
