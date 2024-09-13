@@ -82,28 +82,26 @@ import torch
 import logging
 
 class experiment:
-    def __init__(self, model, trloader, valoader, batch_size, linear=True):
+    def __init__(self, model, trloader, valoader, batch_size):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = model.to(self.device)
         self.trloader = trloader
         self.valoader = valoader
         # self.teloader = teloader
         self.batch_size = batch_size
-        self.linear = linear
         
         self.x_dim = self.trloader.dataset[0].shape[0]*self.trloader.dataset[0].shape[1]
-        self.train_size = len(self.trloader.dataset)
+        self.train_size = len(self.trloader.dataset) # number of datapoints in the training set
+        self.num_batches = self.train_size / self.batch_size # number of batches in the training set
 
         self.valosses = []        # <-- per epoch
         self.batch_trlosses = []  # <-- per batch
-        self.absolute_loss = 0
 
     def save_checkpoint(self, epoch, optimizer, path='checkpoint.pth'):
         state = {
             'epoch': epoch,
             'state_dict': self.model.state_dict(),
             'optimizer': optimizer.state_dict(),
-            'absolute_loss': self.absolute_loss,
             'batch_trlosses': self.batch_trlosses,
             'valosses': self.valosses
         }
@@ -118,39 +116,35 @@ class experiment:
 
             self.valosses.extend(checkpoint['valosses'])
             self.batch_trlosses.extend(checkpoint['batch_trlosses'])
-            self.absolute_loss = checkpoint['absolute_loss']
             return start_epoch
         else:
             raise FileNotFoundError(f"No checkpoint found at '{path}'")
     
-    def loss_plot(self, epoch, view_interval, saveto=None):
-        # Filter out infinite values
-        self.batch_trlosses.extend([loss for loss in self.batch_trlosses if np.isfinite(loss)])
-        self.valosses.extend([loss for loss in self.valosses if np.isfinite(loss)])
-
+    def loss_plot(self, epoch, saveto=None):
+        
         fig, ax = plt.subplots(figsize=(12, 5))
         clear_output(wait=True)
         ax.clear()
 
         ax.set_title(f'Performance (Epoch {epoch}/{self.epochs})', weight='bold', fontsize=15)
         ax.plot(list(range(1, len(self.batch_trlosses) + 1)), self.batch_trlosses,
-                label=f'Training Loss \nLowest: {min(self.batch_trlosses):.3f} \nAverage: {np.mean(self.batch_trlosses):.3f} \n',
+                label=f'Training Loss \nLowest: {min(self.batch_trlosses):.3e} \nAverage: {np.mean(self.batch_trlosses):.3e} \n',
                 linewidth=3, color='blue', marker='o', markersize=3)
         if len(self.valosses) > 0:
-            ax.plot([i * self.batch_ints for i in range(1, len(self.valosses) + 1)], self.valosses,
-                    label=f'Validation Loss \nLowest: {min(self.valosses):.3f} \nAverage: {np.mean(self.valosses):.3f}',
+            ax.plot([i * self.num_batches for i in range(1, len(self.valosses) + 1)], self.valosses,
+                    label=f'Validation Loss \nLowest: {min(self.valosses):.3e} \nAverage: {np.mean(self.valosses):.3e}',
                     linewidth=3, color='gold', marker='o', markersize=3)
         ax.set_ylabel("Loss")
-        ax.set_xlabel(f"Batch Intervals (per {view_interval} batches)")
+        ax.set_xlabel(f"Batch Iterations")
         ax.set_xlim(1, len(self.batch_trlosses) + 1)
         ax.legend(bbox_to_anchor=(1, 1), loc='upper right')
 
         if saveto != None:
             plt.savefig(saveto, bbox_inches='tight')
     
-    def train(self, optimizer, lsfn, epochs, kl_weight, save_every_n_epochs=10, live_plot=False, outliers=True, 
-              view_interval=100, averaging=True, resume_from_epoch=None, resume_timestamp=None, anneal=False):  
-        
+    def train(self, optimizer, lsfn, epochs, kl_weight, save_every_n_epochs=10,
+              averaging=True, resume_from_epoch=None, resume_timestamp=None, anneal=False):  
+        print(self.train_size)
         # ========================== Logger Configuration ==========================
         torch.backends.cudnn.benchmark = True
         torch.set_printoptions(profile="full")
@@ -177,7 +171,6 @@ class experiment:
         logger.addHandler(console_handler)
 
         # ---------------------------------------------------------------------------
-        self.batch_ints = self.train_size / (self.batch_size * view_interval)
         batch_times = []
         self.epoch = 0
         self.epochs = epochs
@@ -207,16 +200,10 @@ class experiment:
 
                 # ========================= training losses =========================
                 self.model.train()
-                loss_ct, counter = 0, 0
                 for i, batch in enumerate(self.trloader):
                     batch_start = time.time()
-                    counter += 1
 
-                    if self.linear:
-                        # batch = batch.view(self.batch_size, self.x_dim)
-                        batch = batch.view(batch.size(0), -1)
-                    else:
-                        batch = batch.view(batch.size(0), 1, 28, 28)
+                    batch = batch.view(batch.size(0), 1, 28, 28)
                     batch = batch.to(self.device)
 
                     optimizer.zero_grad()
@@ -225,35 +212,18 @@ class experiment:
                     # outputs = torch.sigmoid(outputs)  # <-- Sigmoid activation, to change output between 0 and 1 for binary cross entropy
                     # outputs = torch.clamp(outputs, 0, 1)
                     # batch = batch / 255.0  # <-- Normalize target images if needed
-                    batch_loss, reconstruction_loss, klw = lsfn(batch, outputs, mean, log_var, kl_weight, anneal, epoch)
-                    loss_ct += batch_loss.item()
-                    self.absolute_loss += batch_loss.item()
+                    batch_loss, reconstruction_loss, klw, kld = lsfn(batch, outputs, mean, log_var, kl_weight, anneal, epoch)
+                    self.batch_trlosses.append(batch_loss.item())
 
                     batch_time = time.time() - batch_start
                     elapsed_time = time.time() - start_time
                     minutes, seconds = divmod(int(elapsed_time), 60)
                     learning_rate = optimizer.param_groups[0]['lr']
 
-                    batch_log = f'({int(minutes)}m {int(seconds):02d}s) | [{self.epoch}/{epochs}] Batch {i} ({batch_time:.3f}s) | LR: {learning_rate} | KLW: {klw}, Rec. Loss: {reconstruction_loss:.3f} | Loss: {batch_loss.item():.6f} | Abs. Loss: {self.absolute_loss:.2f}'
+                    batch_log = f'({int(minutes)}m {int(seconds):02d}s) | [{self.epoch}/{epochs}] Batch {i} ({batch_time:.3f}s) | LR: {learning_rate} | KLW: {klw}, KLD (loss): {kld:.3f}, Rec. Loss: {reconstruction_loss:.8f} | Total Loss: {batch_loss.item():.8f}'
                     logger.info(batch_log)
                     batch_times.append(batch_time)
-
-                    # ---------- Recording Loss ----------
-                    if (i + 1) % view_interval == 0 or i == len(self.trloader) - 1:  # <-- plot for every specified interval of batches (and also account for the last batch)
-                        avg_loss = loss_ct / counter
-                        if (outliers or (not outliers and self.epoch > 1)):
-                            if averaging:
-                                self.batch_trlosses.append(avg_loss)  # <-- average loss of the interval
-                            else:
-                                self.batch_trlosses.append(batch_loss.item())
-                        else:
-                            continue
-                        loss_ct, counter = 0, 0  # reset for next interval
-
-                        # FOR REAL-TIME PLOTTING -----------
-                        if live_plot:  # Plot losses and validation accuracy in real-time
-                            self.loss_plot(self.epoch, view_interval) # absolute_loss
-                            
+                        
                     batch_loss.backward()
                     optimizer.step()
                 
@@ -264,18 +234,14 @@ class experiment:
                     tot_valoss = 0
                     for batch in self.valoader:
 
-                        if self.linear:
-                            # batch = batch.view(self.batch_size, self.x_dim)
-                            batch = batch.view(batch.size(0), -1)
-                        else:
-                            batch = batch.view(batch.size(0), 1, 28, 28)
+                        batch = batch.view(batch.size(0), 1, 28, 28)
                         batch = batch.to(self.device)
 
                         outputs, mean, log_var = self.model(batch)
                         # outputs = torch.sigmoid(outputs)
                         # outputs = torch.clamp(outputs, 0, 1)
                         batch = batch / 255.0
-                        batch_loss, reconstruction_loss, klw = lsfn(batch, outputs, mean, log_var, kl_weight, anneal, epoch)
+                        batch_loss, reconstruction_loss, klw, kld = lsfn(batch, outputs, mean, log_var, kl_weight, anneal, epoch)
 
                         tot_valoss += batch_loss.item()
 
@@ -286,7 +252,7 @@ class experiment:
                     minutes, seconds = divmod(int(elapsed_time), 60)
                     learning_rate = optimizer.param_groups[0]['lr']
 
-                    val_log = f'({int(minutes)}m {int(seconds):02d}s) | VALIDATION (Epoch {self.epoch}/{epochs}) | LR: {learning_rate} | KLW: {klw}, Rec. Loss: {reconstruction_loss:.3f} | Loss: {avg_val_loss:.6f} |  Abs. Loss: {self.absolute_loss:.2f} -----------'
+                    val_log = f'({int(minutes)}m {int(seconds):02d}s) | VALIDATION (Epoch {self.epoch}/{epochs}) | LR: {learning_rate} | KLW: {klw}, KLD (loss): {kld:.3f}, Rec. Loss: {reconstruction_loss:.8f} | Total Loss: {avg_val_loss:.8f} -----------'
                     logger.info(val_log)
                 
                 
@@ -295,8 +261,7 @@ class experiment:
                     self.save_checkpoint(self.epoch, optimizer, path=f'{foldername}/epoch_{self.epoch}_model.pth')
                     logger.info(f'Checkpoint saved for epoch {self.epoch}.')
 
-                    self.loss_plot(self.epoch, view_interval,
-                                   saveto=f"{foldername}/epoch_{self.epoch}_loss.png") # absolute_loss
+                    self.loss_plot(self.epoch, saveto=f"{foldername}/epoch_{self.epoch}_loss.png")
                     logger.info(f'Loss plot saved for epoch {self.epoch}.')
 
                     self.evaluate()
@@ -334,18 +299,16 @@ class experiment:
                    f'\nModel Parameters: {params[0]}'
                    f'\nEncoder Parameters: {params[1]}'
                    f'\nDecoder Parameters: {params[2]}\n'
-                   f'\nCompleted Epochs: {self.epoch}/{epochs} | Avg Tr.Loss: {np.mean(self.batch_trlosses):.3f} | Absolute Loss: {self.absolute_loss:.3f}'
+                   f'\nCompleted Epochs: {self.epoch}/{epochs} | Avg Tr.Loss: {np.mean(self.batch_trlosses):.8f}'
                    f'\nTotal Training Time: {int(minutes)}m {int(seconds):02d}s | Average Batch Time: {np.mean(batch_times):.3f}s'
                 )
 
-                self.loss_plot(self.epoch, view_interval,
-                               saveto=f"./Loss Plots/{self.timestamp}.png") # absolute_loss
+                self.loss_plot(self.epoch, saveto=f"./Loss Plots/{self.timestamp}.png")
 
             except Exception as e:
                 logger.error(f"An error has occurred: {e}", exc_info=True)
                 raise
 
-        return self.absolute_loss
 
 
     def evaluate(self, threshold=0.1):
@@ -356,10 +319,7 @@ class experiment:
         with torch.no_grad():
             for images in self.valoader:
                 images = images.to(self.device)
-                if self.linear:
-                    images = images.view(images.size(0), -1)
-                else:
-                    images = images.view(images.size(0), 1, 28, 28)
+                images = images.view(images.size(0), 1, 28, 28)
                 reconstruction_images, _, _ = self.model(images)
                 reconstruction_images = reconstruction_images.view_as(images)
 
@@ -376,11 +336,7 @@ class experiment:
     # plot latent space
     def plat(self, latent_dims=(0, 1)):
         for i, x in enumerate(self.valoader):
-            if self.linear:
-                # x = x.view(x.size(0), -1)
-                x = x.view(x.size(0), -1)
-            else:
-                x = x.view(x.size(0), 1, 28, 28)
+            x = x.view(x.size(0), 1, 28, 28)
             x = x.to(self.device)
             z, _ = self.model.encoder(x)
             z = z.to('cpu').detach().numpy()
@@ -426,11 +382,6 @@ class experiment:
                     z = torch.Tensor([[x, y]]).to(self.device)
                 
                 x_hat = self.model.decoder(z)
-                if self.linear:
-                    x_hat = x_hat.reshape(28, 28)
-                # else:
-                #     x_hat = x_hat.squeeze()  # Remove any singleton dimensions (from when using png with rgb channels)
-
                 x_hat = x_hat.to('cpu').detach().numpy()
                 # Convert to single channel if necessary (from when using png with rgb channels)
                 if x_hat.shape[0] == 3:
@@ -454,15 +405,12 @@ class experiment:
         self.model.eval()
         with torch.no_grad():
             data_iter = iter(self.valoader)
+
             images = next(data_iter)
             images = images[:num_images].to(self.device)
-            if self.linear:
-                    images = images.view(images.size(0), -1)
-            else:
-                images = images.view(images.size(0), 1, 28, 28)
+            images = images.view(images.size(0), 1, 28, 28)
+
             reconstruction_images, _, _ = self.model(images)
-            if self.linear:
-                reconstruction_images = reconstruction_images.view(num_images, 1, 28, 28)
             reconstruction_images = reconstruction_images.cpu()
 
         cols = min(num_images, 5)
