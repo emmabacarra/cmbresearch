@@ -80,6 +80,7 @@ def FitsMapper(files, hdul_index, nrows, ncols, cmap, interpolation, histogram=F
 '''
 import torch
 import logging
+from torch.utils.tensorboard import SummaryWriter
 
 class experiment:
     def __init__(self, model, trloader, valoader, batch_size):
@@ -144,8 +145,8 @@ class experiment:
     
     def train(self, optimizer, lsfn, epochs, kl_weight, save_every_n_epochs=10,
               averaging=True, resume_from_epoch=None, resume_timestamp=None, anneal=False):  
-        print(self.train_size)
-        # ========================== Logger Configuration ==========================
+        
+        # ========================== Logger & Tensorboard Configuration ==========================
         torch.backends.cudnn.benchmark = True
         torch.set_printoptions(profile="full")
 
@@ -154,12 +155,16 @@ class experiment:
         else:
             self.timestamp = time.strftime('%m-%d-%y__%H-%M-%S', time.localtime())
 
+        # tensorboard writer
+        self.writer = SummaryWriter(f'./Training Logs/{self.timestamp}/tensorboard')
+
+        # textual logger
         logger = logging.getLogger(__name__)
         logger.setLevel(logging.DEBUG)
         formatter = logging.Formatter('%(asctime)s %(message)s', datefmt='%m/%d/%y %H:%M:%S')
 
         # file handler
-        file_handler = logging.FileHandler(f'./Training Logs/{self.timestamp}.log', mode='a')
+        file_handler = logging.FileHandler(f'./Training Logs/{self.timestamp}/textual.log', mode='a')
         file_handler.setLevel(logging.INFO)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
@@ -220,6 +225,7 @@ class experiment:
                     minutes, seconds = divmod(int(elapsed_time), 60)
                     learning_rate = optimizer.param_groups[0]['lr']
 
+                    self.writer.add_scalar('Batch Loss', batch_loss.item(), i + (epoch - 1) * self.num_batches)
                     batch_log = f'({int(minutes)}m {int(seconds):02d}s) | [{self.epoch}/{epochs}] Batch {i} ({batch_time:.3f}s) | LR: {learning_rate} | KLW: {klw}, KLD (loss): {kld:.3f}, Rec. Loss: {reconstruction_loss:.8f} | Total Loss: {batch_loss.item():.8f}'
                     logger.info(batch_log)
                     batch_times.append(batch_time)
@@ -252,6 +258,7 @@ class experiment:
                     minutes, seconds = divmod(int(elapsed_time), 60)
                     learning_rate = optimizer.param_groups[0]['lr']
 
+                    self.writer.add_scalar('Validation Loss', avg_val_loss, self.epoch*self.num_batches)
                     val_log = f'({int(minutes)}m {int(seconds):02d}s) | VALIDATION (Epoch {self.epoch}/{epochs}) | LR: {learning_rate} | KLW: {klw}, KLD (loss): {kld:.3f}, Rec. Loss: {reconstruction_loss:.8f} | Total Loss: {avg_val_loss:.8f} -----------'
                     logger.info(val_log)
                 
@@ -261,12 +268,13 @@ class experiment:
                     self.save_checkpoint(self.epoch, optimizer, path=f'{foldername}/epoch_{self.epoch}_model.pth')
                     logger.info(f'Checkpoint saved for epoch {self.epoch}.')
 
-                    self.loss_plot(self.epoch, saveto=f"{foldername}/epoch_{self.epoch}_loss.png")
-                    logger.info(f'Loss plot saved for epoch {self.epoch}.')
+                    # self.loss_plot(self.epoch, saveto=f"{foldername}/epoch_{self.epoch}_loss.png")
+                    # logger.info(f'Loss plot saved for epoch {self.epoch}.')
 
                     self.evaluate()
-                    self.pgen(num_images=50, filename=f'{foldername}/epoch_{self.epoch}_samples.png')
-                    logger.info(f'Generated images saved for epoch {self.epoch}.')
+                    # self.pgen(num_images=50, filename=f'{foldername}/epoch_{self.epoch}_samples.png')
+                    self.writer.add_figure(f'Generated Samples, Epoch {self.epoch}', self.pgen(num_images=50), global_step=self.epoch)
+                    logger.info(f'Generated images created for epoch {self.epoch}.')
                 
 
                 clear_output(wait=True)
@@ -281,7 +289,8 @@ class experiment:
             logger.error(f"An error has occurred: {e}", exc_info=True)
             self.save_checkpoint(self.epoch, optimizer, path=f'./Checkpoints/{self.timestamp}/epoch_{self.epoch}_model.pth')
             self.evaluate()
-            self.pgen(num_images=50, filename=f'epoch_{self.epoch}_samples.png')
+            # self.pgen(num_images=50, filename=f'epoch_{self.epoch}_samples.png')
+            self.writer.add_figure('Generated Samples', self.pgen(num_images=50), global_step=self.epoch)
             logger.info(f'Checkpoint saved for epoch {self.epoch}.')
             raise
 
@@ -303,7 +312,8 @@ class experiment:
                    f'\nTotal Training Time: {int(minutes)}m {int(seconds):02d}s | Average Batch Time: {np.mean(batch_times):.3f}s'
                 )
 
-                self.loss_plot(self.epoch, saveto=f"./Loss Plots/{self.timestamp}.png")
+                # self.loss_plot(self.epoch, saveto=f"./Loss Plots/{self.timestamp}.png")
+                self.writer.close()
 
             except Exception as e:
                 logger.error(f"An error has occurred: {e}", exc_info=True)
@@ -453,6 +463,8 @@ class experiment:
         plt.tight_layout()
         if filename == 'Default':
             plt.savefig(f"./Generated Samples/{self.timestamp}.png")
+        if filename == 'None':
+            plt.show()
         else:
             plt.savefig(filename)
        
