@@ -20,13 +20,6 @@ from functions import experiment
 ''' ASSUMPTION - the following variables are defined in the main training script:
 whole_dataset, batch_size, train_split_percent, device, learning_rate, weight_decay, num_epochs, latent_dims, kl_weight, stochastic, etc.'''
 
-transform = transforms.Compose([
-    transforms.ToPILImage(),
-    transforms.ToTensor(),
-    transforms.Normalize((0.0,), (1.0,))])
-# DEACTIVATING TRANSFORM:
-# whole_dataset.transform = transform 
-
 # train-val split
 n_train = int(train_split_percent * len(whole_dataset))
 n_val = len(whole_dataset) - n_train
