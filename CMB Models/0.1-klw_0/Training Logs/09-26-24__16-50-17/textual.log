@@ -1,3 +1,0 @@
-09/26/24 16:50:17 Textual logger initiated. Now configuring tensorboard writer.
-09/26/24 16:50:17 Tensorboard writer created. Tensorboard logs will be saved to ./Training Logs/09-26-24__16-50-17/tensorboard.
-09/26/24 16:50:17 Starting Tensorboard thread...

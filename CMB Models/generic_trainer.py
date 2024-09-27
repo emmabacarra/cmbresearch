@@ -74,17 +74,17 @@ if __name__ == '__main__':
                optimizer=optimizer, lsfn=loss_function, anneal=anneal, epochs=num_epochs, 
                kl_weight=0 if not stochastic else kl_weight,
                save_every_n_epochs=save_every_n_epochs)
-    nnet.evaluate()
+    # nnet.evaluate()
 
-    print(f"Selected latent dimensions: {latent_dims}")
-    plt.figure(figsize=(10, 5))
+    # print(f"Selected latent dimensions: {latent_dims}")
+    # plt.figure(figsize=(10, 5))
 
-    plt.subplot(1, 2, 1)
-    nnet.plat(latent_dims)
-    sns.despine()
+    # plt.subplot(1, 2, 1)
+    # nnet.plat(latent_dims)
+    # sns.despine()
 
-    plt.subplot(1, 2, 2)
-    nnet.prec(n=15, rangex=(-5, 5), rangey=(-5, 5), latent_dims=latent_dims)
-    sns.despine()
+    # plt.subplot(1, 2, 2)
+    # nnet.prec(n=15, rangex=(-5, 5), rangey=(-5, 5), latent_dims=latent_dims)
+    # sns.despine()
 
-    nnet.pgen(num_images=50)
+    # nnet.pgen(num_images=50)

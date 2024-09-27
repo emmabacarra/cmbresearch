@@ -98,7 +98,7 @@ class experiment:
         self.train_size = len(self.trloader.dataset) # number of datapoints in the training set
         self.num_batches = self.train_size / self.batch_size # number of batches in the training set
 
-        self.valosses = []        # <-- per epoch
+        # self.valosses = []        # <-- per epoch
         self.batch_trlosses = []  # <-- per batch
 
     def save_checkpoint(self, epoch, optimizer, path='checkpoint.pth'):
@@ -106,8 +106,8 @@ class experiment:
             'epoch': epoch,
             'state_dict': self.model.state_dict(),
             'optimizer': optimizer.state_dict(),
-            'batch_trlosses': self.batch_trlosses,
-            'valosses': self.valosses
+            'batch_trlosses': self.batch_trlosses
+            # 'valosses': self.valosses
         }
         torch.save(state, path)
 
@@ -118,33 +118,12 @@ class experiment:
             optimizer.load_state_dict(checkpoint['optimizer'])
             start_epoch = checkpoint['epoch'] + 1
 
-            self.valosses.extend(checkpoint['valosses'])
+            # self.valosses.extend(checkpoint['valosses'])
             self.batch_trlosses.extend(checkpoint['batch_trlosses'])
             return start_epoch
         else:
             raise FileNotFoundError(f"No checkpoint found at '{path}'")
     
-    def loss_plot(self, epoch, saveto=None):
-        
-        fig, ax = plt.subplots(figsize=(12, 5))
-        clear_output(wait=True)
-        ax.clear()
-
-        ax.set_title(f'Performance (Epoch {epoch}/{self.epochs})', weight='bold', fontsize=15)
-        ax.plot(list(range(1, len(self.batch_trlosses) + 1)), self.batch_trlosses,
-                label=f'Training Loss \nLowest: {min(self.batch_trlosses):.3e} \nAverage: {np.mean(self.batch_trlosses):.3e} \n',
-                linewidth=3, color='blue', marker='o', markersize=3)
-        if len(self.valosses) > 0:
-            ax.plot([i * self.num_batches for i in range(1, len(self.valosses) + 1)], self.valosses,
-                    label=f'Validation Loss \nLowest: {min(self.valosses):.3e} \nAverage: {np.mean(self.valosses):.3e}',
-                    linewidth=3, color='gold', marker='o', markersize=3)
-        ax.set_ylabel("Loss")
-        ax.set_xlabel(f"Batch Iterations")
-        ax.set_xlim(1, len(self.batch_trlosses) + 1)
-        ax.legend(bbox_to_anchor=(1, 1), loc='upper right')
-
-        if saveto != None:
-            plt.savefig(saveto, bbox_inches='tight')
     
     def open_tensorboard(self, log_dir, port=6006):
         self.port = port
@@ -170,7 +149,7 @@ class experiment:
                 error = process.stderr.readline().decode('utf-8')
                 if error:
                     self.logger.error(error.strip())
-        
+
         self.tensorboard_ready.set()
 
     def train(self, optimizer, lsfn, epochs, kl_weight, save_every_n_epochs=10,
@@ -217,12 +196,11 @@ class experiment:
         #     },
         # }
         # writer_train.add_custom_scalars(layout)
-
         logger.info(f'Tensorboard writers created. Tensorboard logs will be saved to "{log_dir}".')
-        self.tensorboard_ready = threading.Event()
-        thread = threading.Thread(target=self.open_tensorboard, args=(log_dir,), daemon=True)
 
+        self.tensorboard_ready = threading.Event()
         logger.info('Starting Tensorboard thread...')
+        thread = threading.Thread(target=self.open_tensorboard, args=(log_dir,), daemon=True)
         thread.start()
 
         self.tensorboard_ready.wait()
@@ -230,7 +208,9 @@ class experiment:
 
         logger.info('Continuing to training script...')
         time.sleep(3)
-        # ---------------------------------------------------------------------------
+        # ==========================================================================================
+        #         ========================== Training Script ==========================
+        # ==========================================================================================
         batch_times = []
         self.epoch = 0
         self.epochs = epochs
@@ -270,9 +250,6 @@ class experiment:
                     optimizer.zero_grad()
 
                     outputs, mean, log_var = self.model(batch)
-                    # outputs = torch.sigmoid(outputs)  # <-- Sigmoid activation, to change output between 0 and 1 for binary cross entropy
-                    # outputs = torch.clamp(outputs, 0, 1)
-                    # batch = batch / 255.0  # <-- Normalize target images if needed
                     batch_loss, reconstruction_loss, klw, kld = lsfn(batch, outputs, mean, log_var, kl_weight, anneal, epoch)
                     self.batch_trlosses.append(batch_loss.item())
 
@@ -300,15 +277,12 @@ class experiment:
                         batch = batch.to(self.device)
 
                         outputs, mean, log_var = self.model(batch)
-                        # outputs = torch.sigmoid(outputs)
-                        # outputs = torch.clamp(outputs, 0, 1)
                         batch = batch / 255.0
                         batch_loss, reconstruction_loss, klw, kld = lsfn(batch, outputs, mean, log_var, kl_weight, anneal, epoch)
 
                         tot_valoss += batch_loss.item()
 
                     avg_val_loss = tot_valoss / len(self.valoader)
-                    self.valosses.append(avg_val_loss)
 
                     elapsed_time = time.time() - start_time
                     minutes, seconds = divmod(int(elapsed_time), 60)
@@ -320,18 +294,13 @@ class experiment:
                 
                 
                 # ========================= Progress Checkpoints =========================
-                if self.epoch % save_every_n_epochs == 0:
+                if self.epoch % save_every_n_epochs == 0 or self.epoch == epochs:
                     self.save_checkpoint(self.epoch, optimizer, path=f'{foldername}/epoch_{self.epoch}_model.pth')
                     logger.info(f'Checkpoint saved for epoch {self.epoch}.')
 
-                    # self.loss_plot(self.epoch, saveto=f"{foldername}/epoch_{self.epoch}_loss.png")
-                    # logger.info(f'Loss plot saved for epoch {self.epoch}.')
-
                     self.evaluate()
-                    # self.pgen(num_images=50, filesave=f'{foldername}/epoch_{self.epoch}_samples.png')
                     writer_train.add_figure(f'Generated Samples, Epoch {self.epoch}', self.pgen(num_images=50), global_step=global_index)
                     logger.info(f'Generated images created for epoch {self.epoch}.')
-                
 
                 clear_output(wait=True)
             end_time = time.time()
@@ -347,9 +316,9 @@ class experiment:
             logger.error(f"An error has occurred: {e}", exc_info=True)
             self.save_checkpoint(self.epoch, optimizer, path=f'./Checkpoints/{self.timestamp}/epoch_{self.epoch}_model.pth')
             self.evaluate()
-            # self.pgen(num_images=50, filesave=f'epoch_{self.epoch}_samples.png')
             writer_train.add_figure('Generated Samples', self.pgen(num_images=50), global_step=global_index)
             logger.info(f'Checkpoint saved for epoch {self.epoch}.')
+
             writer_train.close()
             writer_val.close()
             raise
@@ -373,7 +342,6 @@ class experiment:
                    f'\nTotal Training Time: {int(minutes)}m {int(seconds):02d}s | Average Batch Time: {np.mean(batch_times):.3f}s \n'
                 )
 
-                # self.loss_plot(self.epoch, saveto=f"./Loss Plots/{self.timestamp}.png")
                 writer_train.close()
                 writer_val.close()
 
@@ -405,75 +373,7 @@ class experiment:
         accuracy = total_correct / total_pixels
         print(f'Accuracy: {accuracy:.3f}')
         self.accuracy = accuracy
-
-
-    # plot latent space
-    def plat(self, latent_dims=(0, 1)):
-        for i, x in enumerate(self.valoader):
-            x = x.view(x.size(0), 1, 28, 28)
-            x = x.to(self.device)
-            z, _ = self.model.encoder(x)
-            z = z.to('cpu').detach().numpy()
-            if self.model.latent_dim > 2:
-                # Select the specified dimensions for plotting
-                z_selected = z[:, latent_dims]
-            else:
-                z_selected = z
-        
-            plt.scatter(z_selected[:, 0], z_selected[:, 1]) # no c=[labels] or cmap because not sure yet??
-            plt.title(f"2D Latent Space", fontsize = 15, fontweight = 'bold')
-            plt.xlabel(f"Dimension {latent_dims[0]}", fontsize = 12)
-            plt.ylabel(f"Dimension {latent_dims[1]}", fontsize = 12)
-            if i > self.batch_size:
-                plt.colorbar()
-                break
-            plt.tight_layout()
-        plt.savefig(f"./Latent Space Plots/{self.timestamp}.png")
     
-    # plot reconstructions
-    def prec(self, rangex=(-5, 10), rangey=(-10, 5), n=12, latent_dims = (0, 1)):
-        '''
-        range in the latent space to generate:
-            rangex = range of x values
-            rangey = range of y values
-
-        n = number of images to plot
-        '''
-        w = self.valoader.dataset[0].shape[0]  # image width
-        img = np.zeros((n*w, n*w))
-        for i, y in enumerate(np.linspace(*rangey, n)):
-            for j, x in enumerate(np.linspace(*rangex, n)):
-                if self.model.latent_dim > 2:
-                    # Initialize a latent vector with zeros
-                    z = torch.zeros((1, self.model.latent_dim)).to(self.device)
-                    # Set the chosen dimensions to the corresponding x, y values
-                    z[0, latent_dims[0]] = x
-                    z[0, latent_dims[1]] = y
-                    # Project other dimensions onto this plane with random values
-                    remaining_dims = [dim for dim in range(self.model.latent_dim) if dim not in latent_dims]
-                    z[0, remaining_dims] = torch.randn(len(remaining_dims)).to(self.device)
-                else:
-                    z = torch.Tensor([[x, y]]).to(self.device)
-                
-                x_hat = self.model.decoder(z)
-                x_hat = x_hat.to('cpu').detach().numpy()
-                # Convert to single channel if necessary (from when using png with rgb channels)
-                if x_hat.shape[0] == 3:
-                    x_hat = np.dot(x_hat.transpose(1, 2, 0), [0.2989, 0.5870, 0.1140])
-                elif x_hat.shape[0] == 1:
-                    x_hat = x_hat.squeeze(0)  # Remove the channel dimension if it's a single channel
-                else:
-                    continue
-                
-                img[(n-1-i)*w:(n-1-i+1)*w, j*w:(j+1)*w] = x_hat
-
-        plt.title(f"Latent Space Images", fontsize = 15, fontweight = 'bold')
-        plt.xlabel(f"Dimension {latent_dims[0]}", fontsize = 12)
-        plt.ylabel(f"Dimension {latent_dims[1]}", fontsize = 12)
-        plt.imshow(img, extent=[*rangex, *rangey])
-        plt.tight_layout()
-        plt.savefig(f"./Latent Space Plots/{self.timestamp}.png")
-
     # plot generated samples
     def pgen(self, num_images=10, filesave=False):
         self.model.eval()
@@ -528,9 +428,79 @@ class experiment:
         if filesave == False:
             return fig
         elif filesave == True:
+            os.makedirs('./Generated Samples', exist_ok=True)
             plt.savefig(f"./Generated Samples/{self.timestamp}.png")
         elif isinstance(filesave, str):
             plt.savefig(filesave)
+            
+
+    # plot reconstructions
+    def prec(self, rangex=(-5, 10), rangey=(-10, 5), n=12, latent_dims = (0, 1)):
+        '''
+        range in the latent space to generate:
+            rangex = range of x values
+            rangey = range of y values
+
+        n = number of images to plot
+        '''
+        w = self.valoader.dataset[0].shape[0]  # image width
+        img = np.zeros((n*w, n*w))
+        for i, y in enumerate(np.linspace(*rangey, n)):
+            for j, x in enumerate(np.linspace(*rangex, n)):
+                if self.model.latent_dim > 2:
+                    # Initialize a latent vector with zeros
+                    z = torch.zeros((1, self.model.latent_dim)).to(self.device)
+                    # Set the chosen dimensions to the corresponding x, y values
+                    z[0, latent_dims[0]] = x
+                    z[0, latent_dims[1]] = y
+                    # Project other dimensions onto this plane with random values
+                    remaining_dims = [dim for dim in range(self.model.latent_dim) if dim not in latent_dims]
+                    z[0, remaining_dims] = torch.randn(len(remaining_dims)).to(self.device)
+                else:
+                    z = torch.Tensor([[x, y]]).to(self.device)
+                
+                x_hat = self.model.decoder(z)
+                x_hat = x_hat.to('cpu').detach().numpy()
+                # Convert to single channel if necessary (from when using png with rgb channels)
+                if x_hat.shape[0] == 3:
+                    x_hat = np.dot(x_hat.transpose(1, 2, 0), [0.2989, 0.5870, 0.1140])
+                elif x_hat.shape[0] == 1:
+                    x_hat = x_hat.squeeze(0)  # Remove the channel dimension if it's a single channel
+                else:
+                    continue
+                
+                img[(n-1-i)*w:(n-1-i+1)*w, j*w:(j+1)*w] = x_hat
+
+        plt.title(f"Latent Space Images", fontsize = 15, fontweight = 'bold')
+        plt.xlabel(f"Dimension {latent_dims[0]}", fontsize = 12)
+        plt.ylabel(f"Dimension {latent_dims[1]}", fontsize = 12)
+        plt.imshow(img, extent=[*rangex, *rangey])
+        plt.tight_layout()
+        os.makedirs('./Latent Space Plots', exist_ok=True)
+        plt.savefig(f"./Latent Space Plots/{self.timestamp}.png")
+
+    # plot latent space
+    def plat(self, latent_dims=(0, 1)):
+        for i, x in enumerate(self.valoader):
+            x = x.view(x.size(0), 1, 28, 28)
+            x = x.to(self.device)
+            z, _ = self.model.encoder(x)
+            z = z.to('cpu').detach().numpy()
+            if self.model.latent_dim > 2:
+                # Select the specified dimensions for plotting
+                z_selected = z[:, latent_dims]
+            else:
+                z_selected = z
+        
+            plt.scatter(z_selected[:, 0], z_selected[:, 1]) # no c=[labels] or cmap because not sure yet??
+            plt.title(f"2D Latent Space", fontsize = 15, fontweight = 'bold')
+            plt.xlabel(f"Dimension {latent_dims[0]}", fontsize = 12)
+            plt.ylabel(f"Dimension {latent_dims[1]}", fontsize = 12)
+            if i > self.batch_size:
+                plt.colorbar()
+                break
+            plt.tight_layout()
+        plt.savefig(f"./Latent Space Plots/{self.timestamp}.png")
         
        
 
