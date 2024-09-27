@@ -1,0 +1,29 @@
+09/26/24 16:01:54 Training initiated with the following parameters:
+Model Parameters: (('image_channels', 1), ('init_channels', 8), ('kernel_size', 14), ('stride', 2), ('padding', 12), ('latent_dim', 32), ('leak', 0.99), ('drop', 0.01), ('stochastic', True))
+Encoder Parameters: (('image_channels', 1), ('init_channels', 8), ('kernel_size', 14), ('stride', 2), ('padding', 12), ('latent_dim', 32), ('leak', 0.99), ('drop', 0.01))
+Decoder Parameters: (('image_channels', 1), ('init_channels', 8), ('kernel_size', 14), ('stride', 2), ('padding', 12), ('latent_dim', 32), ('leak', 0.99), ('drop', 0.01))
+
+09/26/24 16:01:54 Train Loader Image Data Size: (28, 28)
+09/26/24 16:01:54 (0m 00s) | [1/10000] Batch 0 (0.740s) | LR: 1e-06 | KLW: 0, KLD (loss): 9.910, Rec. Loss: 0.24063858 | Total Loss: 0.24063858
+09/26/24 16:01:55 (0m 01s) | [1/10000] Batch 1 (0.007s) | LR: 1e-06 | KLW: 0, KLD (loss): 9.906, Rec. Loss: 0.24066244 | Total Loss: 0.24066244
+09/26/24 16:01:55 (0m 01s) | [1/10000] Batch 2 (0.004s) | LR: 1e-06 | KLW: 0, KLD (loss): 9.909, Rec. Loss: 0.24080628 | Total Loss: 0.24080628
+09/26/24 16:01:55 (0m 01s) | [1/10000] Batch 3 (0.005s) | LR: 1e-06 | KLW: 0, KLD (loss): 9.906, Rec. Loss: 0.24056409 | Total Loss: 0.24056409
+09/26/24 16:01:55 (0m 01s) | [1/10000] Batch 4 (0.004s) | LR: 1e-06 | KLW: 0, KLD (loss): 9.905, Rec. Loss: 0.24050535 | Total Loss: 0.24050535
+09/26/24 16:01:56 (0m 01s) | [1/10000] Batch 5 (0.005s) | LR: 1e-06 | KLW: 0, KLD (loss): 9.901, Rec. Loss: 0.24046253 | Total Loss: 0.24046253
+09/26/24 16:01:56 (0m 01s) | [1/10000] Batch 6 (0.005s) | LR: 1e-06 | KLW: 0, KLD (loss): 9.904, Rec. Loss: 0.24046516 | Total Loss: 0.24046516
+09/26/24 16:01:56 (0m 01s) | [1/10000] Batch 7 (0.005s) | LR: 1e-06 | KLW: 0, KLD (loss): 9.902, Rec. Loss: 0.24052086 | Total Loss: 0.24052086
+09/26/24 16:01:56 (0m 01s) | [1/10000] Batch 8 (0.006s) | LR: 1e-06 | KLW: 0, KLD (loss): 9.903, Rec. Loss: 0.24045664 | Total Loss: 0.24045664
+09/26/24 16:01:56 (0m 01s) | [1/10000] Batch 9 (0.005s) | LR: 1e-06 | KLW: 0, KLD (loss): 9.901, Rec. Loss: 0.24043551 | Total Loss: 0.24043551
+09/26/24 16:01:56 Training was interrupted by the user.
+09/26/24 16:01:56 Checkpoint saved for epoch 1.
+09/26/24 16:01:56 Model saved as 'saved_model.pth'.
+09/26/24 16:01:56 
+===========================================================================================
+===========================================================================================
+
+Model Parameters: (('image_channels', 1), ('init_channels', 8), ('kernel_size', 14), ('stride', 2), ('padding', 12), ('latent_dim', 32), ('leak', 0.99), ('drop', 0.01), ('stochastic', True))
+Encoder Parameters: (('image_channels', 1), ('init_channels', 8), ('kernel_size', 14), ('stride', 2), ('padding', 12), ('latent_dim', 32), ('leak', 0.99), ('drop', 0.01))
+Decoder Parameters: (('image_channels', 1), ('init_channels', 8), ('kernel_size', 14), ('stride', 2), ('padding', 12), ('latent_dim', 32), ('leak', 0.99), ('drop', 0.01))
+
+Completed Epochs: 1/10000 | Avg Tr.Loss: 0.24055175
+Total Training Time: 0m 02s | Average Batch Time: 0.079s

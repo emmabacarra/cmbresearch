@@ -1,0 +1,5 @@
+09/26/24 17:44:09 Textual logger initiated. Now configuring tensorboard writer.
+09/26/24 17:44:09 Tensorboard writer created. Tensorboard logs will be saved to "./Training Logs/09-26-24__17-44-09/tensorboard".
+09/26/24 17:44:09 Starting Tensorboard thread...
+09/26/24 17:45:53 TensorFlow installation not found - running with reduced feature set.
+09/26/24 17:45:58 TensorBoard 2.17.1 at http://David-Desktop:6006/ (Press CTRL+C to quit)

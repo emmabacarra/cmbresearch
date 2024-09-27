@@ -30,7 +30,7 @@ drop=0.01
 
 learning_rate = 1e-6
 num_epochs = 10000
-save_every_n_epochs = 10
+save_every_n_epochs = 3
 kl_weight = 0
 anneal=False
 weight_decay = 1e-10
