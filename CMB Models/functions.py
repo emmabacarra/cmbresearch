@@ -409,14 +409,22 @@ class experiment:
             ax1 = fig.add_subplot(gridspec[row, col])
             ax1.imshow(images[i].permute(1, 2, 0).cpu(), cmap='gray')
             ax1.set_title(f"{i+1}", fontsize=10)
-            ax1.set_xlabel(f'{images[i].shape} \nMin: {images[i].min():.3e} \nMax: {images[i].max():.3e}', fontsize=7)
+            ax1.set_xlabel(f'{images[i].shape}' 
+                           f'\nMin: {images[i].min():.3e}' 
+                           f'\nMax: {images[i].max():.3e}' 
+                           f'\nMean: {images[i].mean():.3e}' 
+                           f'\nVar: {images[i].var():.3e}', fontsize=7)
             ax1.set_xticks([]), ax1.set_yticks([])
 
             # reconstructed image after forward pass
             ax2 = fig.add_subplot(gridspec[row, col + 6])
             ax2.imshow(reconstruction_images[i].permute(1, 2, 0), cmap='gray')
             ax2.set_title(f"{i+1}", fontsize=10)
-            ax2.set_xlabel(f'{reconstruction_images[i].shape} \nMin: {reconstruction_images[i].min():.3e} \nMax: {reconstruction_images[i].max():.3e}', fontsize=7)
+            ax2.set_xlabel(f'{reconstruction_images[i].shape}'
+                           f'\nMin: {reconstruction_images[i].min():.3e}' 
+                           f'\nMax: {reconstruction_images[i].max():.3e} '
+                           f'\nMean: {reconstruction_images[i].mean():.3e}' 
+                           f'\nVar: {reconstruction_images[i].var():.3e}', fontsize=7)
             ax2.set_xticks([]), ax2.set_yticks([])
 
         # Set overall titles for each half
