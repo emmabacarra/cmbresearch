@@ -187,7 +187,7 @@ class experiment:
 
 
         # tensorboard writer
-        log_dir = f"Training Logs/{self.timestamp}/tensorboard"
+        log_dir = f"./Training Logs/{self.timestamp}/tensorboard"
         writer_train = SummaryWriter(log_dir=log_dir+'/train')
         writer_val = SummaryWriter(log_dir=log_dir+'/validation')
         # layout = {

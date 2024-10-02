@@ -36,7 +36,6 @@ val_loader = DataLoader(dataset=val_subset, batch_size=batch_size, shuffle=False
 img_size = train_subset[0].shape[0] * train_subset[0].shape[1]
 
 def loss_function(x, x_hat, mean, log_var, kl_weight=1, anneal=False, epoch=None):
-    x = x / 255.0  # Normalize target images if needed
     reconstruction_loss = nn.functional.mse_loss(x_hat, x, reduction='mean')
     KLD = -0.5 * torch.sum(1 + log_var - mean.pow(2) - log_var.exp())
     if anneal:

@@ -28,9 +28,9 @@ latent_dim=32
 leak=0.99
 drop=0.01
 
-learning_rate = 1e-6
+learning_rate = 1e-8 # previously 1e-6
 num_epochs = 10000
-save_every_n_epochs = 3
+save_every_n_epochs = 20
 kl_weight = 0
 anneal=False
 weight_decay = 1e-10
@@ -42,9 +42,6 @@ def get_epochs(): # this is for comparison.ipynb
 
 '''
 ======================================================================================================================================
-to fix/debug:
-- plot image before forward passing
-- threshold for outliers (clipping) --> messing up reconstructions
 '''
 
 whole_dataset = WMAP(dataset_path)
@@ -60,5 +57,10 @@ exec(open('../generic_trainer.py').read())
 - copied from model 0.0
 - decreased kl weight to 0
 
+09-26-24__22-12-22
+- nothing changed, just re-run to implement tensorboard
 
+09-27-24__00-41-08
+- changed learning rate from 1e-6 to 1e-8
+- increased drop from 0.01 to 0.1
 '''
