@@ -246,6 +246,7 @@ class experiment:
 
                     batch = batch.view(batch.size(0), 1, 28, 28)
                     batch = batch.to(self.device)
+                    batch = batch / 255.0
 
                     optimizer.zero_grad()
 
@@ -275,9 +276,9 @@ class experiment:
 
                         batch = batch.view(batch.size(0), 1, 28, 28)
                         batch = batch.to(self.device)
-
-                        outputs, mean, log_var = self.model(batch)
                         batch = batch / 255.0
+                        
+                        outputs, mean, log_var = self.model(batch)
                         batch_loss, reconstruction_loss, klw, kld = lsfn(batch, outputs, mean, log_var, kl_weight, anneal, epoch)
 
                         tot_valoss += batch_loss.item()
@@ -362,6 +363,8 @@ class experiment:
             for images in self.valoader:
                 images = images.to(self.device)
                 images = images.view(images.size(0), 1, 28, 28)
+                images = images / 255.0
+
                 reconstruction_images, _, _ = self.model(images)
                 reconstruction_images = reconstruction_images.view_as(images)
 
@@ -383,6 +386,7 @@ class experiment:
             images = next(data_iter)
             images = images[:num_images].to(self.device)
             images = images.view(images.size(0), 1, 28, 28)
+            images = images / 255.0
 
             reconstruction_images, _, _ = self.model(images)
             reconstruction_images = reconstruction_images.cpu()
@@ -405,17 +409,19 @@ class experiment:
             row = i // cols
             col = i % cols
 
+            # original image before forward pass
             ax1 = fig.add_subplot(gridspec[row, col])
-            ax2 = fig.add_subplot(gridspec[row, col + 6])
-
             ax1.imshow(images[i].permute(1, 2, 0).cpu(), cmap='gray')
-            ax2.imshow(reconstruction_images[i].permute(1, 2, 0), cmap='gray')
-            
             ax1.set_title(f"{i+1}", fontsize=10)
-            ax1.axis('off')
+            ax1.set_xlabel(f'Dimensions: {images[i].shape} \nMin: {np.min(images[i])}, Max: {np.max(images[i])}', fontsize=8)
+            ax1.set_xticks([]), ax1.set_yticks([])
 
+            # reconstructed image after forward pass
+            ax2 = fig.add_subplot(gridspec[row, col + 6])
+            ax2.imshow(reconstruction_images[i].permute(1, 2, 0), cmap='gray')
             ax2.set_title(f"{i+1}", fontsize=10)
-            ax2.axis('off')
+            ax2.set_xlabel(f'Dimensions: {reconstruction_images[i].shape} \nMin: {np.min(reconstruction_images[i])}, Max: {np.max(reconstruction_images[i])}', fontsize=8)
+            ax2.set_xticks([]), ax1.set_yticks([])
 
         # Set overall titles for each half
         axes_original.set_title("Original Images", weight='bold', fontsize=15, pad=20)
