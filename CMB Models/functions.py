@@ -246,7 +246,6 @@ class experiment:
 
                     batch = batch.view(batch.size(0), 1, 28, 28)
                     batch = batch.to(self.device)
-                    batch = batch / 255.0
 
                     optimizer.zero_grad()
 
@@ -276,7 +275,6 @@ class experiment:
 
                         batch = batch.view(batch.size(0), 1, 28, 28)
                         batch = batch.to(self.device)
-                        batch = batch / 255.0
                         
                         outputs, mean, log_var = self.model(batch)
                         batch_loss, reconstruction_loss, klw, kld = lsfn(batch, outputs, mean, log_var, kl_weight, anneal, epoch)
@@ -363,7 +361,6 @@ class experiment:
             for images in self.valoader:
                 images = images.to(self.device)
                 images = images.view(images.size(0), 1, 28, 28)
-                images = images / 255.0
 
                 reconstruction_images, _, _ = self.model(images)
                 reconstruction_images = reconstruction_images.view_as(images)
@@ -386,7 +383,6 @@ class experiment:
             images = next(data_iter)
             images = images[:num_images].to(self.device)
             images = images.view(images.size(0), 1, 28, 28)
-            images = images / 255.0
 
             reconstruction_images, _, _ = self.model(images)
             reconstruction_images = reconstruction_images.cpu()
@@ -413,15 +409,15 @@ class experiment:
             ax1 = fig.add_subplot(gridspec[row, col])
             ax1.imshow(images[i].permute(1, 2, 0).cpu(), cmap='gray')
             ax1.set_title(f"{i+1}", fontsize=10)
-            ax1.set_xlabel(f'Dimensions: {images[i].shape} \nMin: {np.min(images[i])}, Max: {np.max(images[i])}', fontsize=8)
+            ax1.set_xlabel(f'{images[i].shape} \nMin: {images[i].min():.3e} \nMax: {images[i].max():.3e}', fontsize=7)
             ax1.set_xticks([]), ax1.set_yticks([])
 
             # reconstructed image after forward pass
             ax2 = fig.add_subplot(gridspec[row, col + 6])
             ax2.imshow(reconstruction_images[i].permute(1, 2, 0), cmap='gray')
             ax2.set_title(f"{i+1}", fontsize=10)
-            ax2.set_xlabel(f'Dimensions: {reconstruction_images[i].shape} \nMin: {np.min(reconstruction_images[i])}, Max: {np.max(reconstruction_images[i])}', fontsize=8)
-            ax2.set_xticks([]), ax1.set_yticks([])
+            ax2.set_xlabel(f'{reconstruction_images[i].shape} \nMin: {reconstruction_images[i].min():.3e} \nMax: {reconstruction_images[i].max():.3e}', fontsize=7)
+            ax2.set_xticks([]), ax2.set_yticks([])
 
         # Set overall titles for each half
         axes_original.set_title("Original Images", weight='bold', fontsize=15, pad=20)
@@ -430,7 +426,7 @@ class experiment:
         # Set the overall title for the entire figure
         fig.suptitle(f"Accuracy: {self.accuracy:.3f}", fontsize=20, fontweight='bold', y=1)
 
-        plt.tight_layout()
+        plt.tight_layout(pad=3)
         if filesave == False:
             return fig
         elif filesave == True:

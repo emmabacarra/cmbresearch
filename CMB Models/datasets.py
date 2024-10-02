@@ -15,9 +15,16 @@ class WMAP(Dataset):
 
     def __getitem__(self, idx):
         img_path = os.path.join(self.dataset_path, self.img_list[idx])
-        # image = read_image(img_path, mode=ImageReadMode.RGB)  
         image = np.load(img_path)
-        image = image / 255.0  # normalize to [0, 1] range
+        
+        min_val = np.min(image.flatten())
+        max_val = np.max(image.flatten())
+        
+        if min_val != max_val:
+            normalized_image = (image - min_val) / (max_val - min_val)
+        else:
+            normalized_image = np.zeros_like(image)
         if self.transform:
-            image = self.transform(image)
-        return image
+            normalized_image = self.transform(normalized_image)
+        
+        return normalized_image
