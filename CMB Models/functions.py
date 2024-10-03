@@ -88,6 +88,7 @@ import requests
 from scipy.stats import pearsonr
 from skimage.metrics import structural_similarity
 from skimage.metrics import mean_squared_error
+from datetime import timedelta
 
 class experiment:
     def __init__(self, model, trloader, valoader, batch_size):
@@ -266,12 +267,11 @@ class experiment:
                     self.batch_trlosses.append(batch_loss.item())
 
                     batch_time = time.time() - batch_start
-                    elapsed_time = time.time() - start_time
-                    minutes, seconds = divmod(int(elapsed_time), 60)
+                    elapsed_time = timedelta(seconds=time.time() - start_time)
                     learning_rate = optimizer.param_groups[0]['lr']
 
                     writer_train.add_scalar('loss', batch_loss.item(), global_index)
-                    batch_log = f'({int(minutes)}m {int(seconds):02d}s) | [{self.epoch}/{epochs}] Batch {i} ({batch_time:.3f}s) | LR: {learning_rate} | KLW: {klw}, KLD (loss): {kld:.3f}, Rec. Loss: {reconstruction_loss:.8f} | Total Loss: {batch_loss.item():.8f}'
+                    batch_log = f'({elapsed_time}) | [{self.epoch}/{epochs}] Batch {i} ({batch_time:.3f}s) | LR: {learning_rate} | KLW: {klw}, KLD (loss): {kld:.3f}, Rec. Loss: {reconstruction_loss:.8f} | Total Loss: {batch_loss.item():.8f}'
                     logger.info(batch_log)
                     batch_times.append(batch_time)
                         
@@ -295,12 +295,11 @@ class experiment:
 
                     avg_val_loss = tot_valoss / len(self.valoader)
 
-                    elapsed_time = time.time() - start_time
-                    minutes, seconds = divmod(int(elapsed_time), 60)
+                    elapsed_time = timedelta(seconds=time.time() - start_time)
                     learning_rate = optimizer.param_groups[0]['lr']
 
                     writer_val.add_scalar('loss', avg_val_loss, global_index)
-                    val_log = f'({int(minutes)}m {int(seconds):02d}s) | VALIDATION (Epoch {self.epoch}/{epochs}) | LR: {learning_rate} | KLW: {klw}, KLD (loss): {kld:.3f}, Rec. Loss: {reconstruction_loss:.8f} | Total Loss: {avg_val_loss:.8f} -----------'
+                    val_log = f'({elapsed_time}) | VALIDATION (Epoch {self.epoch}/{epochs}) | LR: {learning_rate} | KLW: {klw}, KLD (loss): {kld:.3f}, Rec. Loss: {reconstruction_loss:.8f} | Total Loss: {avg_val_loss:.8f} -----------'
                     logger.info(val_log)
                 
                 
@@ -337,7 +336,7 @@ class experiment:
         finally:
             try:
                 end_time = time.time()
-                minutes, seconds = divmod(end_time - start_time, 60)
+                elapsed_time = timedelta(seconds=end_time - start_time)
                 
                 logger.info(
                     '\n==========================================================================================='
@@ -347,7 +346,7 @@ class experiment:
                    f'\nEncoder Parameters: {params[1]}'
                    f'\nDecoder Parameters: {params[2]}\n'
                    f'\nCompleted Epochs: {self.epoch}/{epochs} | Avg Tr.Loss: {np.mean(self.batch_trlosses):.8f}'
-                   f'\nTotal Training Time: {int(minutes)}m {int(seconds):02d}s | Average Batch Time: {np.mean(batch_times):.3f}s \n'
+                   f'\nTotal Training Time: {elapsed_time} | Average Batch Time: {np.mean(batch_times):.3f}s \n'
                 )
 
                 writer_train.close()
