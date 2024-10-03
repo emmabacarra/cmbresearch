@@ -337,11 +337,8 @@ class experiment:
         finally:
             try:
                 end_time = time.time()
-
-                torch.save(self.model.state_dict(), 'latest_saved_model.pth')
-                logger.info(f"Model saved as 'saved_model.pth'.")
-
                 minutes, seconds = divmod(end_time - start_time, 60)
+                
                 logger.info(
                     '\n==========================================================================================='
                     '\n===========================================================================================\n'
