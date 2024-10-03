@@ -79,11 +79,15 @@ def FitsMapper(files, hdul_index, nrows, ncols, cmap, interpolation, histogram=F
 ------------------------------------------------------------------------------------------------------------------------------------------
 '''
 import torch
+import torch.nn as nn
 import logging
 from torch.utils.tensorboard import SummaryWriter
 import threading
 import subprocess
 import requests
+from scipy.stats import pearsonr
+from skimage.metrics import structural_similarity
+from skimage.metrics import mean_squared_error
 
 class experiment:
     def __init__(self, model, trloader, valoader, batch_size):
@@ -151,8 +155,16 @@ class experiment:
                     self.logger.error(error.strip())
 
         self.tensorboard_ready.set()
+    
+    def loss_function(self, x, x_hat, mean, log_var, kl_weight=1, anneal=False, epoch=None):
+        reconstruction_loss = nn.functional.mse_loss(x_hat, x, reduction='mean')
+        KLD = -0.5 * torch.sum(1 + log_var - mean.pow(2) - log_var.exp())
+        if anneal:
+            kl_weight = min(1.0, epoch / 100)
+        total_loss = reconstruction_loss + kl_weight * KLD
+        return total_loss, reconstruction_loss, kl_weight, KLD   # KLD is the KL loss term
 
-    def train(self, optimizer, lsfn, epochs, kl_weight, save_every_n_epochs=10,
+    def train(self, optimizer, epochs, kl_weight, save_every_n_epochs=10,
               averaging=True, resume_from_epoch=None, resume_timestamp=None, anneal=False):  
         
         # ========================== Logger & Tensorboard Configuration ==========================
@@ -250,7 +262,7 @@ class experiment:
                     optimizer.zero_grad()
 
                     outputs, mean, log_var = self.model(batch)
-                    batch_loss, reconstruction_loss, klw, kld = lsfn(batch, outputs, mean, log_var, kl_weight, anneal, epoch)
+                    batch_loss, reconstruction_loss, klw, kld = self.loss_function(batch, outputs, mean, log_var, kl_weight, anneal, epoch)
                     self.batch_trlosses.append(batch_loss.item())
 
                     batch_time = time.time() - batch_start
@@ -277,7 +289,7 @@ class experiment:
                         batch = batch.to(self.device)
                         
                         outputs, mean, log_var = self.model(batch)
-                        batch_loss, reconstruction_loss, klw, kld = lsfn(batch, outputs, mean, log_var, kl_weight, anneal, epoch)
+                        batch_loss, reconstruction_loss, klw, kld = self.loss_function(batch, outputs, mean, log_var, kl_weight, anneal, epoch)
 
                         tot_valoss += batch_loss.item()
 
@@ -311,7 +323,7 @@ class experiment:
             writer_train.close()
             writer_val.close()
 
-        except Exception as e:
+        except (Exception, ValueError, TypeError) as e:
             logger.error(f"An error has occurred: {e}", exc_info=True)
             self.save_checkpoint(self.epoch, optimizer, path=f'./Checkpoints/{self.timestamp}/epoch_{self.epoch}_model.pth')
             self.evaluate()
@@ -370,9 +382,9 @@ class experiment:
                 total_correct += correct_pixels
                 total_pixels += images.numel()
         
-        accuracy = total_correct / total_pixels
-        print(f'Accuracy: {accuracy:.3f}')
-        self.accuracy = accuracy
+        self.accuracy = total_correct / total_pixels
+        print(f'Accuracy: {self.accuracy:.3f}')
+
     
     # plot generated samples
     def pgen(self, num_images=10, filesave=False):
@@ -390,12 +402,12 @@ class experiment:
         cols = min(num_images, 5)
         rows = (num_images + cols - 1) // cols
         
-        fig = plt.figure(figsize=(15, 3 * rows))
-        gridspec = fig.add_gridspec(nrows=rows, ncols=12)
+        fig = plt.figure(figsize=(20, 4 * rows))
+        gridspec = fig.add_gridspec(nrows=rows, ncols=11)
 
         # Create subplots for original and reconstructed images with distinct background colors
         axes_original = fig.add_subplot(gridspec[:, 0:6], facecolor='lightblue')
-        axes_reconstructed = fig.add_subplot(gridspec[:, 6:12])
+        axes_reconstructed = fig.add_subplot(gridspec[:, 6:11])
 
         # Turn off the axes for the overall subplots
         axes_original.axis('off')
@@ -405,26 +417,38 @@ class experiment:
             row = i // cols
             col = i % cols
 
+            img_in = torch.squeeze(images[i]).cpu().numpy()
+            img_out = torch.squeeze(reconstruction_images[i]).cpu().numpy()
+            # print("img_in, img_out shapes:", img_in.shape, img_out.shape)
+
+            # pearson correlation coefficient and p-value
+            pcc, pval = pearsonr(img_in.flatten(), img_out.flatten())
+
+            # structural similarity index
+            ssim = structural_similarity(img_in, img_out, win_size=11, data_range=img_out.max() - img_out.min())
+
+            # mean squared error
+            mse = mean_squared_error(img_in, img_out)
+
+
             # original image before forward pass
             ax1 = fig.add_subplot(gridspec[row, col])
-            ax1.imshow(images[i].permute(1, 2, 0).cpu(), cmap='gray')
+            ax1.imshow(img_in, cmap='gray')
             ax1.set_title(f"{i+1}", fontsize=10)
-            ax1.set_xlabel(f'{images[i].shape}' 
-                           f'\nMin: {images[i].min():.3e}' 
-                           f'\nMax: {images[i].max():.3e}' 
-                           f'\nMean: {images[i].mean():.3e}' 
-                           f'\nVar: {images[i].var():.3e}', fontsize=7)
+            ax1.set_xlabel(f'Dimensions: {img_in.shape}' 
+                           f'\nMin: {img_in.min():.3e}' 
+                           f'\nMax: {img_in.max():.3e}', fontsize=7)
             ax1.set_xticks([]), ax1.set_yticks([])
 
             # reconstructed image after forward pass
             ax2 = fig.add_subplot(gridspec[row, col + 6])
-            ax2.imshow(reconstruction_images[i].permute(1, 2, 0), cmap='gray')
+            ax2.imshow(img_out, cmap='gray')
             ax2.set_title(f"{i+1}", fontsize=10)
-            ax2.set_xlabel(f'{reconstruction_images[i].shape}'
-                           f'\nMin: {reconstruction_images[i].min():.3e}' 
-                           f'\nMax: {reconstruction_images[i].max():.3e} '
-                           f'\nMean: {reconstruction_images[i].mean():.3e}' 
-                           f'\nVar: {reconstruction_images[i].var():.3e}', fontsize=7)
+            ax2.set_xlabel(f'Dimensions: {img_out.shape}'
+                           f'\nMin: {img_out.min():.3e}' 
+                           f'\nMax: {img_out.max():.3e}'
+                           f'\nPCC: {pcc:.3f} | P-Value: {pval:.3f}' 
+                           f'\nMSE: {mse:.3f} | SSIM: {ssim:.3f}', fontsize=7)
             ax2.set_xticks([]), ax2.set_yticks([])
 
         # Set overall titles for each half

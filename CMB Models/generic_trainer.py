@@ -2,7 +2,6 @@ import sys
 
 # pytorch functionalities
 import torch
-import torch.nn as nn
 
 # data processing
 from torch.utils.data import DataLoader
@@ -35,14 +34,6 @@ val_loader = DataLoader(dataset=val_subset, batch_size=batch_size, shuffle=False
 
 img_size = train_subset[0].shape[0] * train_subset[0].shape[1]
 
-def loss_function(x, x_hat, mean, log_var, kl_weight=1, anneal=False, epoch=None):
-    reconstruction_loss = nn.functional.mse_loss(x_hat, x, reduction='mean')
-    KLD = -0.5 * torch.sum(1 + log_var - mean.pow(2) - log_var.exp())
-    if anneal:
-        kl_weight = min(1.0, epoch / 100)
-    total_loss = reconstruction_loss + kl_weight * KLD
-    return total_loss, reconstruction_loss, kl_weight, KLD   # KLD is the KL loss term
-
 model = ConvVAE(
     image_channels=image_channels,  # setting to 1 since the images are grayscale
     init_channels=init_channels,
@@ -63,7 +54,7 @@ def get_model():
 
 if __name__ == '__main__':
     nnet.train(resume_timestamp=resume_timestamp, resume_from_epoch=resume_from_epoch,
-               optimizer=optimizer, lsfn=loss_function, anneal=anneal, epochs=num_epochs, 
+               optimizer=optimizer, anneal=anneal, epochs=num_epochs, 
                kl_weight=0 if not stochastic else kl_weight,
                save_every_n_epochs=save_every_n_epochs)
     # nnet.evaluate()
