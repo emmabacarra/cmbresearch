@@ -30,7 +30,7 @@ drop=0.01
 
 learning_rate = 1e-8 # previously 1e-6
 num_epochs = 10000
-save_every_n_epochs = 1
+save_every_n_epochs = 10
 kl_weight = 0
 anneal=False
 weight_decay = 1e-10
@@ -62,5 +62,4 @@ exec(open('../generic_trainer.py').read())
 
 09-27-24__00-41-08
 - changed learning rate from 1e-6 to 1e-8
-- increased drop from 0.01 to 0.1
 '''
