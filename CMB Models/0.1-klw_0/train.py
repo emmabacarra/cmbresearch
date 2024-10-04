@@ -30,7 +30,7 @@ drop=0.01
 
 learning_rate = 1e-8 # previously 1e-6
 num_epochs = 10000
-save_every_n_epochs = 10
+save_every_n_epochs = 1
 kl_weight = 0
 anneal=False
 weight_decay = 1e-10
@@ -44,7 +44,7 @@ def get_epochs(): # this is for comparison.ipynb
 ======================================================================================================================================
 '''
 
-whole_dataset = WMAP(dataset_path)
+whole_dataset = WMAP(dataset_path, normalize=False)
 
 # Import and run the generic training script
 resume_timestamp = None     # example: '09-05-24__16-24-24'
@@ -62,4 +62,15 @@ exec(open('../generic_trainer.py').read())
 
 09-27-24__00-41-08
 - changed learning rate from 1e-6 to 1e-8
+
+10-04-24__12-36-05
+- added scale_each=True to make_grid() in debug_plots, normalize=False
+- still looks like stark black/white images
+
+10-04-24__12-55-59
+- now trying with normalize=True in make_grid
+- looks like it's supposed to, so normalize and scale_each set to True for make_grid
+
+10-04-24__13-20-51
+- increased bin size to 200, added both log and linear histograms to debug_plots
 '''
