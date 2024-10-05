@@ -4,13 +4,14 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 import inspect
 
 class ConvEncoder(nn.Module):
-    def __init__(self, image_channels, init_channels, kernel_size, padding, latent_dim, leak, drop):
+    def __init__(self, image_channels, init_channels, kernel_size, stride, padding, latent_dim, leak, drop):
         super(ConvEncoder, self).__init__()
         
         self.latent_dim = latent_dim
         self.image_channels = image_channels
         self.init_channels = init_channels
         self.kernel_size = kernel_size
+        self.stride = stride
         self.padding = padding
         self.leak = leak
         self.drop = drop
@@ -21,13 +22,13 @@ class ConvEncoder(nn.Module):
         self.init_ch_x16= init_channels * 16       # 128
 
         self.encoder = nn.Sequential(
-            nn.Conv2d(image_channels, init_channels, kernel_size=kernel_size, stride=2, padding=padding),
+            nn.Conv2d(image_channels, init_channels, kernel_size=kernel_size, stride=stride, padding=padding),
             nn.LeakyReLU(leak),
-            nn.Conv2d(init_channels, self.init_ch_x2, kernel_size=kernel_size, stride=2, padding=padding),
+            nn.Conv2d(init_channels, self.init_ch_x2, kernel_size=kernel_size, stride=stride, padding=padding),
             nn.LeakyReLU(leak),
-            nn.Conv2d(self.init_ch_x2, self.init_ch_x4, kernel_size=kernel_size, stride=2, padding=padding),
+            nn.Conv2d(self.init_ch_x2, self.init_ch_x4, kernel_size=kernel_size, stride=stride, padding=padding),
             nn.LeakyReLU(leak),
-            nn.Conv2d(self.init_ch_x4, self.init_ch_x8, kernel_size=kernel_size, stride=2, padding=0),
+            nn.Conv2d(self.init_ch_x4, self.init_ch_x8, kernel_size=kernel_size, stride=stride, padding=0),
             nn.Flatten(),
             nn.Dropout(drop)
         )
@@ -49,13 +50,14 @@ class ConvEncoder(nn.Module):
 
 
 class ConvDecoder(nn.Module):
-    def __init__(self, image_channels, init_channels, kernel_size, padding, latent_dim, leak, drop):
+    def __init__(self, image_channels, init_channels, kernel_size, stride, padding, latent_dim, leak, drop):
         super(ConvDecoder, self).__init__()
 
         self.latent_dim = latent_dim
         self.image_channels = image_channels
         self.init_channels = init_channels
         self.kernel_size = kernel_size
+        self.stride = stride
         self.padding = padding
         self.leak = leak
         self.drop = drop
@@ -65,13 +67,13 @@ class ConvDecoder(nn.Module):
         self.init_ch_x8 = init_channels * 8        # 64
         
         self.decoder = nn.Sequential(
-            nn.ConvTranspose2d(self.init_ch_x8, self.init_ch_x8, kernel_size=kernel_size, stride=2, padding=0),
+            nn.ConvTranspose2d(self.init_ch_x8, self.init_ch_x8, kernel_size=kernel_size, stride=stride, padding=0),
             nn.LeakyReLU(leak),
-            nn.ConvTranspose2d(self.init_ch_x8, self.init_ch_x4, kernel_size=kernel_size, stride=2, padding=padding),
+            nn.ConvTranspose2d(self.init_ch_x8, self.init_ch_x4, kernel_size=kernel_size, stride=stride, padding=padding),
             nn.LeakyReLU(leak),
-            nn.ConvTranspose2d(self.init_ch_x4, self.init_ch_x2, kernel_size=kernel_size, stride=2, padding=padding),
+            nn.ConvTranspose2d(self.init_ch_x4, self.init_ch_x2, kernel_size=kernel_size, stride=stride, padding=padding),
             nn.LeakyReLU(leak),
-            nn.ConvTranspose2d(self.init_ch_x2, image_channels, kernel_size=kernel_size, stride=2, padding=padding),
+            nn.ConvTranspose2d(self.init_ch_x2, image_channels, kernel_size=kernel_size, stride=stride, padding=padding),
             nn.Sigmoid()
         )
 
@@ -89,7 +91,7 @@ class ConvDecoder(nn.Module):
 
 
 class ConvVAE(nn.Module):
-    def __init__(self, image_channels=1, init_channels=8, kernel_size=4, padding=1, latent_dim=16, leak=0.8, drop=0.03, stochastic=True):
+    def __init__(self, image_channels=1, init_channels=8, kernel_size=4, stride=2, padding=1, latent_dim=16, leak=0.8, drop=0.03, stochastic=True):
         super(ConvVAE, self).__init__()
 
         self.latent_dim = latent_dim
@@ -98,6 +100,7 @@ class ConvVAE(nn.Module):
         self.image_channels = image_channels
         self.init_channels = init_channels
         self.kernel_size = kernel_size
+        self.stride = stride
         self.padding = padding
         self.leak = leak
         self.drop = drop
@@ -106,6 +109,7 @@ class ConvVAE(nn.Module):
                                     image_channels=image_channels, 
                                     init_channels=init_channels, 
                                     kernel_size=kernel_size,
+                                    stride=stride,
                                     padding=padding,
                                     latent_dim=latent_dim, 
                                     leak=leak, drop=drop
@@ -114,6 +118,7 @@ class ConvVAE(nn.Module):
                                     image_channels=image_channels, 
                                     init_channels=init_channels, 
                                     kernel_size=kernel_size,
+                                    stride=stride,
                                     padding=padding,
                                     latent_dim=latent_dim, 
                                     leak=leak, drop=drop

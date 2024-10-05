@@ -35,15 +35,15 @@ val_loader = DataLoader(dataset=val_subset, batch_size=batch_size, shuffle=False
 img_size = train_subset[0].shape[0] * train_subset[0].shape[1]
 
 model = ConvVAE(
-    image_channels=image_channels,  # setting to 1 since the images are grayscale
-    init_channels=init_channels,
-    kernel_size=kernel_size,
-    stride=stride,
-    padding=padding,
-    latent_dim=latent_dim,
-    leak=leak,
-    drop=drop,
-    stochastic=stochastic
+    # image_channels=image_channels,  # setting to 1 since the images are grayscale
+    # init_channels=init_channels,
+    # kernel_size=kernel_size,
+    # stride=stride,
+    # padding=padding,
+    # latent_dim=latent_dim,
+    # leak=leak,
+    # drop=drop,
+    # stochastic=stochastic
 ).to(device)
 
 nnet = experiment(model, train_loader, val_loader, batch_size)

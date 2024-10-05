@@ -82,6 +82,7 @@ import torch
 import torch.nn as nn
 import logging
 from torch.utils.tensorboard import SummaryWriter
+from torchvision.utils import make_grid
 import threading
 import subprocess
 import requests
@@ -89,6 +90,7 @@ from scipy.stats import pearsonr
 from skimage.metrics import structural_similarity
 from skimage.metrics import mean_squared_error
 from datetime import timedelta
+import random
 
 class experiment:
     def __init__(self, model, trloader, valoader, batch_size):
@@ -159,11 +161,11 @@ class experiment:
     
     def loss_function(self, x, x_hat, mean, log_var, kl_weight=1, anneal=False, epoch=None):
         reconstruction_loss = nn.functional.mse_loss(x_hat, x, reduction='mean')
-        KLD = -0.5 * torch.sum(1 + log_var - mean.pow(2) - log_var.exp())
+        KL_loss = -0.5 * torch.sum(1 + log_var - mean.pow(2) - log_var.exp())
         if anneal:
-            kl_weight = min(1.0, epoch / 100)
-        total_loss = reconstruction_loss + kl_weight * KLD
-        return total_loss, reconstruction_loss, kl_weight, KLD   # KLD is the KL loss term
+            kl_weight = min(1.0, epoch / 1000)
+        total_loss = reconstruction_loss + kl_weight * KL_loss
+        return total_loss, reconstruction_loss, kl_weight, KL_loss
 
     def train(self, optimizer, epochs, kl_weight, save_every_n_epochs=10,
               averaging=True, resume_from_epoch=None, resume_timestamp=None, anneal=False):  
@@ -234,13 +236,13 @@ class experiment:
             start_epoch = self.load_checkpoint(optimizer, path=f'./Checkpoints/{resume_timestamp}/epoch_{resume_from_epoch}_model.pth')
             logger.info(f"Resumed from epoch {start_epoch}.")
 
-        params = [tuple(self.model.params().items()),
-                  tuple(self.model.encoder.params().items()),
-                  tuple(self.model.decoder.params().items())]
+        params = [tuple(self.model.params().items())]
+                #   tuple(self.model.encoder.params().items()),
+                #   tuple(self.model.decoder.params().items())]
         logger.info(f'Training initiated with the following parameters:'
-                    f'\nModel Parameters: {params[0]}'
-                    f'\nEncoder Parameters: {params[1]}'
-                    f'\nDecoder Parameters: {params[2]}\n')
+                    f'\nModel Parameters: {params[0]}')
+                    # f'\nEncoder Parameters: {params[1]}'
+                    # f'\nDecoder Parameters: {params[2]}\n')
         logger.info(f'Train Loader Image Data Size: {self.trloader.dataset[0].shape}')
         
         start_time = time.time()
@@ -253,6 +255,7 @@ class experiment:
 
                 # ========================= training losses =========================
                 self.model.train()
+                randint = random.randint(0, self.num_batches-1) # -1 to avoid index out of range
                 for i, batch in enumerate(self.trloader):
                     global_index = (epoch-1) * self.num_batches + i
                     batch_start = time.time()
@@ -262,21 +265,33 @@ class experiment:
 
                     optimizer.zero_grad()
 
+                    # debugging -----------------------
+                    if i == randint: 
+                        writer_train.add_figure(f'Images Before Forward Pass - Batch {i}, Epoch {epoch}',
+                                                 self.debug_plots(batch)[0],
+                                                 global_step=global_index)
+                        writer_train.add_figure(f'Pixel Value Histograms - Batch {i}, Epoch {epoch}',
+                                                self.debug_plots(batch)[1],
+                                                global_step=global_index)
+                    # ---------------------------------
+
                     outputs, mean, log_var = self.model(batch)
                     batch_loss, reconstruction_loss, klw, kld = self.loss_function(batch, outputs, mean, log_var, kl_weight, anneal, epoch)
                     self.batch_trlosses.append(batch_loss.item())
 
                     batch_time = time.time() - batch_start
                     elapsed_time = timedelta(seconds=time.time() - start_time)
+                    formatted_time = str(elapsed_time).split(".")[0] + f".{int(elapsed_time.microseconds / 10000):02d}"
                     learning_rate = optimizer.param_groups[0]['lr']
 
                     writer_train.add_scalar('loss', batch_loss.item(), global_index)
-                    batch_log = f'({elapsed_time}) | [{self.epoch}/{epochs}] Batch {i} ({batch_time:.3f}s) | LR: {learning_rate} | KLW: {klw}, KLD (loss): {kld:.3f}, Rec. Loss: {reconstruction_loss:.8f} | Total Loss: {batch_loss.item():.8f}'
+                    batch_log = f'({formatted_time}) | [{self.epoch}/{epochs}] Batch {i} ({batch_time:.3f}s) | LR: {learning_rate} | KLW: {klw}, KLD (loss): {kld:.3f}, Rec. Loss: {reconstruction_loss:.8f} | Total Loss: {batch_loss.item():.8f}'
                     logger.info(batch_log)
                     batch_times.append(batch_time)
                         
                     batch_loss.backward()
                     optimizer.step()
+
                 
                 # ========================= validation losses =========================
                 logger.info(f'Calculating validation for epoch {self.epoch}.')
@@ -296,10 +311,11 @@ class experiment:
                     avg_val_loss = tot_valoss / len(self.valoader)
 
                     elapsed_time = timedelta(seconds=time.time() - start_time)
+                    formatted_time = str(elapsed_time).split(".")[0] + f".{int(elapsed_time.microseconds / 10000):02d}"
                     learning_rate = optimizer.param_groups[0]['lr']
 
                     writer_val.add_scalar('loss', avg_val_loss, global_index)
-                    val_log = f'({elapsed_time}) | VALIDATION (Epoch {self.epoch}/{epochs}) | LR: {learning_rate} | KLW: {klw}, KLD (loss): {kld:.3f}, Rec. Loss: {reconstruction_loss:.8f} | Total Loss: {avg_val_loss:.8f} -----------'
+                    val_log = f'({formatted_time}) | VALIDATION (Epoch {self.epoch}/{epochs}) | LR: {learning_rate} | KLW: {klw}, KLD (loss): {kld:.3f}, Rec. Loss: {reconstruction_loss:.8f} | Total Loss: {avg_val_loss:.8f} -----------'
                     logger.info(val_log)
                 
                 
@@ -309,10 +325,14 @@ class experiment:
                     logger.info(f'Checkpoint saved for epoch {self.epoch}.')
 
                     self.evaluate()
-                    writer_train.add_figure(f'Generated Samples, Epoch {self.epoch}', self.pgen(num_images=50), global_step=global_index)
+                    writer_val.add_figure(f'Generated Samples, Epoch {self.epoch}', self.generate_samples(num_images=50), global_step=global_index)
                     logger.info(f'Generated images created for epoch {self.epoch}.')
 
-                clear_output(wait=True)
+                    logger.info(f'Creating latent space plot for epoch {self.epoch}...')
+                    writer_val.add_figure(f'Latent Space, Epoch {self.epoch}', self.latent_space(), global_step=global_index)
+                    logger.info(f'Latent space plot created for epoch {self.epoch}.')
+
+                # clear_output(wait=True)
             end_time = time.time()
             
         except KeyboardInterrupt:
@@ -325,9 +345,15 @@ class experiment:
         except (Exception, ValueError, TypeError) as e:
             logger.error(f"An error has occurred: {e}", exc_info=True)
             self.save_checkpoint(self.epoch, optimizer, path=f'./Checkpoints/{self.timestamp}/epoch_{self.epoch}_model.pth')
-            self.evaluate()
-            writer_train.add_figure('Generated Samples', self.pgen(num_images=50), global_step=global_index)
             logger.info(f'Checkpoint saved for epoch {self.epoch}.')
+            
+            self.evaluate()
+            writer_val.add_figure(f'Generated Samples, Epoch {self.epoch}', self.generate_samples(num_images=50), global_step=global_index)
+            logger.info(f'Generated images created for epoch {self.epoch}.')
+            
+            logger.info(f'Creating latent space plot for epoch {self.epoch}...')
+            writer_val.add_figure(f'Latent Space, Epoch {self.epoch}', self.latent_space(), global_step=global_index)
+            logger.info(f'Latent space plot created for epoch {self.epoch}.')
 
             writer_train.close()
             writer_val.close()
@@ -335,18 +361,19 @@ class experiment:
 
         finally:
             try:
-                end_time = time.time()
-                elapsed_time = timedelta(seconds=end_time - start_time)
+                # end_time = time.time()
+                elapsed_time = timedelta(seconds=time.time() - start_time)
+                formatted_time = str(elapsed_time).split(".")[0] + f".{int(elapsed_time.microseconds / 10000):02d}"
                 
                 logger.info(
                     '\n==========================================================================================='
                     '\n===========================================================================================\n'
                    f'----  TRAINING SUMMARY FOR SESSION {self.timestamp}  ----\n'
                    f'\nModel Parameters: {params[0]}'
-                   f'\nEncoder Parameters: {params[1]}'
-                   f'\nDecoder Parameters: {params[2]}\n'
+                #    f'\nEncoder Parameters: {params[1]}'
+                #    f'\nDecoder Parameters: {params[2]}\n'
                    f'\nCompleted Epochs: {self.epoch}/{epochs} | Avg Tr.Loss: {np.mean(self.batch_trlosses):.8f}'
-                   f'\nTotal Training Time: {elapsed_time} | Average Batch Time: {np.mean(batch_times):.3f}s \n'
+                   f'\nTotal Training Time: {formatted_time} | Average Batch Time: {np.mean(batch_times):.3f}s \n'
                 )
 
                 writer_train.close()
@@ -383,7 +410,7 @@ class experiment:
 
     
     # plot generated samples
-    def pgen(self, num_images=10, filesave=False):
+    def generate_samples(self, num_images=10, filesave=False):
         self.model.eval()
         with torch.no_grad():
             data_iter = iter(self.valoader)
@@ -428,8 +455,8 @@ class experiment:
 
 
             # original image before forward pass
-            ax1 = fig.add_subplot(gridspec[row, col])
-            ax1.imshow(img_in, cmap='gray')
+            ax1 = fig.add_subplot(gridspec[row, col], facecolor='lightblue')
+            ax1.imshow(img_in, cmap='gray', filternorm=False)
             ax1.set_title(f"{i+1}", fontsize=10)
             ax1.set_xlabel(f'Dimensions: {img_in.shape}' 
                            f'\nMin: {img_in.min():.3e}' 
@@ -438,13 +465,13 @@ class experiment:
 
             # reconstructed image after forward pass
             ax2 = fig.add_subplot(gridspec[row, col + 6])
-            ax2.imshow(img_out, cmap='gray')
+            ax2.imshow(img_out, cmap='gray', filternorm=False)
             ax2.set_title(f"{i+1}", fontsize=10)
             ax2.set_xlabel(f'Dimensions: {img_out.shape}'
                            f'\nMin: {img_out.min():.3e}' 
                            f'\nMax: {img_out.max():.3e}'
                            f'\nPCC: {pcc:.3f} | P-Value: {pval:.3f}' 
-                           f'\nMSE: {mse:.3f} | SSIM: {ssim:.3f}', fontsize=7)
+                           f'\nMSE: {mse:.3f} | SSIM: {ssim:.3e}', fontsize=7)
             ax2.set_xticks([]), ax2.set_yticks([])
 
         # Set overall titles for each half
@@ -462,9 +489,98 @@ class experiment:
             plt.savefig(f"./Generated Samples/{self.timestamp}.png")
         elif isinstance(filesave, str):
             plt.savefig(filesave)
-            
+        return fig
+    
+    def debug_plots(self, batch):
+        fig, ax = plt.subplots(figsize=(15, 15))
 
-    # plot reconstructions
+        # batch shape should be: torch.Size([100, 1, 28, 28])
+        img_grid = make_grid(batch, nrow=10, normalize=True, padding=2, scale_each=True) 
+        # normalizing for visualization shouldn't affect training
+        # needs to also have scale_each=True to normalize each image separately
+        # normalize and scale_each need to be True for image to be displayed correctly
+        # img_grid shape: torch.Size([3, 302, 302]) <-- dimensions of the grid picture itself
+        ax.imshow(img_grid.permute(1, 2, 0).cpu().numpy(), cmap='grey')
+        ax.axis("off")
+
+        batch_size, channels, height, width = batch.shape
+        ax.set_title(f"Batch Dimensions: {batch.shape}", fontsize=16)
+
+        batch = batch.cpu()
+        for i in range(10):
+            for j in range(10):
+                idx = i * 10 + j
+                img = batch[idx]
+
+                # Image dimensions
+                height, width = img.shape[1], img.shape[2]
+                
+                # Min and max pixel values
+                min_val, max_val = img.min().item(), img.max().item()
+
+                # Display the image information below the image
+                ax.text(
+                    j * (width + 2) + width // 2,  # x-position of the text
+                    i * (height + 2) + height + 2,    # y-position of the text
+                    f"{img.shape}\nmin:{min_val:.2f} max:{max_val:.2f}",
+                    fontsize=8, ha='center', va='top', color='white', backgroundcolor='black'
+                )
+        plt.tight_layout()
+
+        fig2, axs2 = plt.subplots(1, 2, figsize=(12, 6))  # Set the figure size for the histogram
+        # dimensions: batch number, channel, height, width
+        pixel_values = batch.flatten().numpy()
+
+        axs2[0].hist(pixel_values, bins=200, alpha=0.7, log=True)
+        axs2[0].set_title('Pixel Value Histogram (Logarithmic Scale)', fontsize=15, fontweight='bold')
+        axs2[0].set_xlabel('value')
+        axs2[0].set_ylabel('count')
+
+        axs2[1].hist(pixel_values, bins=200, alpha=0.7, log=False)
+        axs2[1].set_title('Pixel Value Histogram (Linear Scale)', fontsize=15, fontweight='bold')
+        axs2[1].set_xlabel('value')
+        axs2[1].set_ylabel('count')
+
+        return fig, fig2
+
+    # plot latent space
+    def latent_space(self):
+        from sklearn.decomposition import PCA
+        from sklearn.manifold import TSNE
+        fig, axs = plt.subplots(1, 2, figsize=(14, 7))
+
+        latent_vectors = []
+        with torch.no_grad():
+            for batches in self.valoader:
+                batches = batches.view(batches.size(0), 1, 28, 28).to(self.device)
+                
+                h = self.model.encoder(batches)
+                z, mu, logvar = self.model.bottleneck(h)
+                latent_vectors.append(mu.cpu().numpy())
+            
+            latent_vectors = np.concatenate(latent_vectors, axis=0)
+        
+        pca = PCA(n_components=2)  # 2D plot
+        latent_2d_pca = pca.fit_transform(latent_vectors)
+        scatter_pca = axs[0].scatter(latent_2d_pca[:, 0], latent_2d_pca[:, 1], c='blue', alpha=0.5)
+        axs[0].set_title('Latent Space (2D PCA)')
+
+        tsne = TSNE(n_components=2)
+        latent_2d_tsne = tsne.fit_transform(latent_vectors)
+        scatter_tsne = axs[1].scatter(latent_2d_tsne[:, 0], latent_2d_tsne[:, 1], c='orange', alpha=0.5)
+        axs[1].set_title('Latent Space (2D t-SNE)')
+
+        fig.suptitle(f'Latent Space Visualization | Total Images: {len(latent_vectors)}', fontsize=20, fontweight='bold')
+
+        cbar_pca = fig.colorbar(scatter_pca, ax=axs[0])
+        cbar_tsne = fig.colorbar(scatter_tsne, ax=axs[1])
+        cbar_pca.set_label('PCA')
+        cbar_tsne.set_label('t-SNE')
+
+        return fig
+    
+
+    # plot reconstructions in latent space
     def prec(self, rangex=(-5, 10), rangey=(-10, 5), n=12, latent_dims = (0, 1)):
         '''
         range in the latent space to generate:
@@ -507,29 +623,6 @@ class experiment:
         plt.imshow(img, extent=[*rangex, *rangey])
         plt.tight_layout()
         os.makedirs('./Latent Space Plots', exist_ok=True)
-        plt.savefig(f"./Latent Space Plots/{self.timestamp}.png")
-
-    # plot latent space
-    def plat(self, latent_dims=(0, 1)):
-        for i, x in enumerate(self.valoader):
-            x = x.view(x.size(0), 1, 28, 28)
-            x = x.to(self.device)
-            z, _ = self.model.encoder(x)
-            z = z.to('cpu').detach().numpy()
-            if self.model.latent_dim > 2:
-                # Select the specified dimensions for plotting
-                z_selected = z[:, latent_dims]
-            else:
-                z_selected = z
-        
-            plt.scatter(z_selected[:, 0], z_selected[:, 1]) # no c=[labels] or cmap because not sure yet??
-            plt.title(f"2D Latent Space", fontsize = 15, fontweight = 'bold')
-            plt.xlabel(f"Dimension {latent_dims[0]}", fontsize = 12)
-            plt.ylabel(f"Dimension {latent_dims[1]}", fontsize = 12)
-            if i > self.batch_size:
-                plt.colorbar()
-                break
-            plt.tight_layout()
         plt.savefig(f"./Latent Space Plots/{self.timestamp}.png")
         
        
