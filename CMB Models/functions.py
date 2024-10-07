@@ -329,7 +329,9 @@ class experiment:
                     logger.info(f'Generated images created for epoch {self.epoch}.')
 
                     logger.info(f'Creating latent space plot for epoch {self.epoch}...')
-                    writer_val.add_figure(f'Latent Space, Epoch {self.epoch}', self.latent_space(), global_step=global_index)
+                    latent_vectors = self.latent_space()
+                    logger.info(f'Latent vectors shape: {latent_vectors.shape}')
+                    writer_val.add_embedding(latent_vectors,  tag=f'Latent Space, Epoch {self.epoch}', global_step=global_index)
                     logger.info(f'Latent space plot created for epoch {self.epoch}.')
 
                 # clear_output(wait=True)
@@ -352,7 +354,9 @@ class experiment:
             logger.info(f'Generated images created for epoch {self.epoch}.')
             
             logger.info(f'Creating latent space plot for epoch {self.epoch}...')
-            writer_val.add_figure(f'Latent Space, Epoch {self.epoch}', self.latent_space(), global_step=global_index)
+            latent_vectors = self.latent_space()
+            logger.info(f'Latent vectors shape: {latent_vectors.shape}')
+            writer_val.add_embedding(latent_vectors,  tag=f'Latent Space, Epoch {self.epoch}', global_step=global_index)
             logger.info(f'Latent space plot created for epoch {self.epoch}.')
 
             writer_train.close()
@@ -558,26 +562,9 @@ class experiment:
                 z, mu, logvar = self.model.bottleneck(h)
                 latent_vectors.append(mu.cpu().numpy())
             
-            latent_vectors = np.concatenate(latent_vectors, axis=0)
-        
-        pca = PCA(n_components=2)  # 2D plot
-        latent_2d_pca = pca.fit_transform(latent_vectors)
-        scatter_pca = axs[0].scatter(latent_2d_pca[:, 0], latent_2d_pca[:, 1], c='blue', alpha=0.5)
-        axs[0].set_title('Latent Space (2D PCA)')
+        latent_vectors = np.concatenate(latent_vectors, axis=0)
 
-        tsne = TSNE(n_components=2)
-        latent_2d_tsne = tsne.fit_transform(latent_vectors)
-        scatter_tsne = axs[1].scatter(latent_2d_tsne[:, 0], latent_2d_tsne[:, 1], c='orange', alpha=0.5)
-        axs[1].set_title('Latent Space (2D t-SNE)')
-
-        fig.suptitle(f'Latent Space Visualization | Total Images: {len(latent_vectors)}', fontsize=20, fontweight='bold')
-
-        cbar_pca = fig.colorbar(scatter_pca, ax=axs[0])
-        cbar_tsne = fig.colorbar(scatter_tsne, ax=axs[1])
-        cbar_pca.set_label('PCA')
-        cbar_tsne.set_label('t-SNE')
-
-        return fig
+        return latent_vectors
     
 
     # plot reconstructions in latent space
