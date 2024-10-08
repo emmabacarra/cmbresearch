@@ -1,0 +1,592 @@
+embeddings {
+  tensor_name: "Latent Space, Epoch 10:15999.0"
+  tensor_path: "15999.0/Latent Space, Epoch 10\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 20:31999.0"
+  tensor_path: "31999.0/Latent Space, Epoch 20\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 30:47999.0"
+  tensor_path: "47999.0/Latent Space, Epoch 30\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 40:63999.0"
+  tensor_path: "63999.0/Latent Space, Epoch 40\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 50:79999.0"
+  tensor_path: "79999.0/Latent Space, Epoch 50\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 60:95999.0"
+  tensor_path: "95999.0/Latent Space, Epoch 60\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 70:111999.0"
+  tensor_path: "111999.0/Latent Space, Epoch 70\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 80:127999.0"
+  tensor_path: "127999.0/Latent Space, Epoch 80\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 90:143999.0"
+  tensor_path: "143999.0/Latent Space, Epoch 90\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 100:159999.0"
+  tensor_path: "159999.0/Latent Space, Epoch 100\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 110:175999.0"
+  tensor_path: "175999.0/Latent Space, Epoch 110\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 120:191999.0"
+  tensor_path: "191999.0/Latent Space, Epoch 120\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 130:207999.0"
+  tensor_path: "207999.0/Latent Space, Epoch 130\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 140:223999.0"
+  tensor_path: "223999.0/Latent Space, Epoch 140\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 150:239999.0"
+  tensor_path: "239999.0/Latent Space, Epoch 150\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 160:255999.0"
+  tensor_path: "255999.0/Latent Space, Epoch 160\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 170:271999.0"
+  tensor_path: "271999.0/Latent Space, Epoch 170\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 180:287999.0"
+  tensor_path: "287999.0/Latent Space, Epoch 180\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 190:303999.0"
+  tensor_path: "303999.0/Latent Space, Epoch 190\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 200:319999.0"
+  tensor_path: "319999.0/Latent Space, Epoch 200\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 210:335999.0"
+  tensor_path: "335999.0/Latent Space, Epoch 210\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 220:351999.0"
+  tensor_path: "351999.0/Latent Space, Epoch 220\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 230:367999.0"
+  tensor_path: "367999.0/Latent Space, Epoch 230\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 240:383999.0"
+  tensor_path: "383999.0/Latent Space, Epoch 240\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 250:399999.0"
+  tensor_path: "399999.0/Latent Space, Epoch 250\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 260:415999.0"
+  tensor_path: "415999.0/Latent Space, Epoch 260\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 270:431999.0"
+  tensor_path: "431999.0/Latent Space, Epoch 270\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 280:447999.0"
+  tensor_path: "447999.0/Latent Space, Epoch 280\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 290:463999.0"
+  tensor_path: "463999.0/Latent Space, Epoch 290\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 300:479999.0"
+  tensor_path: "479999.0/Latent Space, Epoch 300\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 310:495999.0"
+  tensor_path: "495999.0/Latent Space, Epoch 310\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 320:511999.0"
+  tensor_path: "511999.0/Latent Space, Epoch 320\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 330:527999.0"
+  tensor_path: "527999.0/Latent Space, Epoch 330\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 340:543999.0"
+  tensor_path: "543999.0/Latent Space, Epoch 340\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 350:559999.0"
+  tensor_path: "559999.0/Latent Space, Epoch 350\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 360:575999.0"
+  tensor_path: "575999.0/Latent Space, Epoch 360\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 370:591999.0"
+  tensor_path: "591999.0/Latent Space, Epoch 370\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 380:607999.0"
+  tensor_path: "607999.0/Latent Space, Epoch 380\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 390:623999.0"
+  tensor_path: "623999.0/Latent Space, Epoch 390\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 400:639999.0"
+  tensor_path: "639999.0/Latent Space, Epoch 400\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 410:655999.0"
+  tensor_path: "655999.0/Latent Space, Epoch 410\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 420:671999.0"
+  tensor_path: "671999.0/Latent Space, Epoch 420\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 430:687999.0"
+  tensor_path: "687999.0/Latent Space, Epoch 430\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 440:703999.0"
+  tensor_path: "703999.0/Latent Space, Epoch 440\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 450:719999.0"
+  tensor_path: "719999.0/Latent Space, Epoch 450\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 460:735999.0"
+  tensor_path: "735999.0/Latent Space, Epoch 460\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 470:751999.0"
+  tensor_path: "751999.0/Latent Space, Epoch 470\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 480:767999.0"
+  tensor_path: "767999.0/Latent Space, Epoch 480\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 490:783999.0"
+  tensor_path: "783999.0/Latent Space, Epoch 490\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 500:799999.0"
+  tensor_path: "799999.0/Latent Space, Epoch 500\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 510:815999.0"
+  tensor_path: "815999.0/Latent Space, Epoch 510\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 520:831999.0"
+  tensor_path: "831999.0/Latent Space, Epoch 520\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 530:847999.0"
+  tensor_path: "847999.0/Latent Space, Epoch 530\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 540:863999.0"
+  tensor_path: "863999.0/Latent Space, Epoch 540\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 550:879999.0"
+  tensor_path: "879999.0/Latent Space, Epoch 550\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 560:895999.0"
+  tensor_path: "895999.0/Latent Space, Epoch 560\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 570:911999.0"
+  tensor_path: "911999.0/Latent Space, Epoch 570\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 580:927999.0"
+  tensor_path: "927999.0/Latent Space, Epoch 580\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 590:943999.0"
+  tensor_path: "943999.0/Latent Space, Epoch 590\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 600:959999.0"
+  tensor_path: "959999.0/Latent Space, Epoch 600\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 610:975999.0"
+  tensor_path: "975999.0/Latent Space, Epoch 610\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 620:991999.0"
+  tensor_path: "991999.0/Latent Space, Epoch 620\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 630:1007999.0"
+  tensor_path: "1007999.0/Latent Space, Epoch 630\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 640:1023999.0"
+  tensor_path: "1023999.0/Latent Space, Epoch 640\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 650:1039999.0"
+  tensor_path: "1039999.0/Latent Space, Epoch 650\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 660:1055999.0"
+  tensor_path: "1055999.0/Latent Space, Epoch 660\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 670:1071999.0"
+  tensor_path: "1071999.0/Latent Space, Epoch 670\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 680:1087999.0"
+  tensor_path: "1087999.0/Latent Space, Epoch 680\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 690:1103999.0"
+  tensor_path: "1103999.0/Latent Space, Epoch 690\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 700:1119999.0"
+  tensor_path: "1119999.0/Latent Space, Epoch 700\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 710:1135999.0"
+  tensor_path: "1135999.0/Latent Space, Epoch 710\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 720:1151999.0"
+  tensor_path: "1151999.0/Latent Space, Epoch 720\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 730:1167999.0"
+  tensor_path: "1167999.0/Latent Space, Epoch 730\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 740:1183999.0"
+  tensor_path: "1183999.0/Latent Space, Epoch 740\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 750:1199999.0"
+  tensor_path: "1199999.0/Latent Space, Epoch 750\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 760:1215999.0"
+  tensor_path: "1215999.0/Latent Space, Epoch 760\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 770:1231999.0"
+  tensor_path: "1231999.0/Latent Space, Epoch 770\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 780:1247999.0"
+  tensor_path: "1247999.0/Latent Space, Epoch 780\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 790:1263999.0"
+  tensor_path: "1263999.0/Latent Space, Epoch 790\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 800:1279999.0"
+  tensor_path: "1279999.0/Latent Space, Epoch 800\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 810:1295999.0"
+  tensor_path: "1295999.0/Latent Space, Epoch 810\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 820:1311999.0"
+  tensor_path: "1311999.0/Latent Space, Epoch 820\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 830:1327999.0"
+  tensor_path: "1327999.0/Latent Space, Epoch 830\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 840:1343999.0"
+  tensor_path: "1343999.0/Latent Space, Epoch 840\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 850:1359999.0"
+  tensor_path: "1359999.0/Latent Space, Epoch 850\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 860:1375999.0"
+  tensor_path: "1375999.0/Latent Space, Epoch 860\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 870:1391999.0"
+  tensor_path: "1391999.0/Latent Space, Epoch 870\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 880:1407999.0"
+  tensor_path: "1407999.0/Latent Space, Epoch 880\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 890:1423999.0"
+  tensor_path: "1423999.0/Latent Space, Epoch 890\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 900:1439999.0"
+  tensor_path: "1439999.0/Latent Space, Epoch 900\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 910:1455999.0"
+  tensor_path: "1455999.0/Latent Space, Epoch 910\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 920:1471999.0"
+  tensor_path: "1471999.0/Latent Space, Epoch 920\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 930:1487999.0"
+  tensor_path: "1487999.0/Latent Space, Epoch 930\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 940:1503999.0"
+  tensor_path: "1503999.0/Latent Space, Epoch 940\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 950:1519999.0"
+  tensor_path: "1519999.0/Latent Space, Epoch 950\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 960:1535999.0"
+  tensor_path: "1535999.0/Latent Space, Epoch 960\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 970:1551999.0"
+  tensor_path: "1551999.0/Latent Space, Epoch 970\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 980:1567999.0"
+  tensor_path: "1567999.0/Latent Space, Epoch 980\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 990:1583999.0"
+  tensor_path: "1583999.0/Latent Space, Epoch 990\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1000:1599999.0"
+  tensor_path: "1599999.0/Latent Space, Epoch 1000\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1010:1615999.0"
+  tensor_path: "1615999.0/Latent Space, Epoch 1010\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1020:1631999.0"
+  tensor_path: "1631999.0/Latent Space, Epoch 1020\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1030:1647999.0"
+  tensor_path: "1647999.0/Latent Space, Epoch 1030\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1040:1663999.0"
+  tensor_path: "1663999.0/Latent Space, Epoch 1040\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1050:1679999.0"
+  tensor_path: "1679999.0/Latent Space, Epoch 1050\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1060:1695999.0"
+  tensor_path: "1695999.0/Latent Space, Epoch 1060\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1070:1711999.0"
+  tensor_path: "1711999.0/Latent Space, Epoch 1070\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1080:1727999.0"
+  tensor_path: "1727999.0/Latent Space, Epoch 1080\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1090:1743999.0"
+  tensor_path: "1743999.0/Latent Space, Epoch 1090\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1100:1759999.0"
+  tensor_path: "1759999.0/Latent Space, Epoch 1100\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1110:1775999.0"
+  tensor_path: "1775999.0/Latent Space, Epoch 1110\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1120:1791999.0"
+  tensor_path: "1791999.0/Latent Space, Epoch 1120\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1130:1807999.0"
+  tensor_path: "1807999.0/Latent Space, Epoch 1130\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1140:1823999.0"
+  tensor_path: "1823999.0/Latent Space, Epoch 1140\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1150:1839999.0"
+  tensor_path: "1839999.0/Latent Space, Epoch 1150\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1160:1855999.0"
+  tensor_path: "1855999.0/Latent Space, Epoch 1160\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1170:1871999.0"
+  tensor_path: "1871999.0/Latent Space, Epoch 1170\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1180:1887999.0"
+  tensor_path: "1887999.0/Latent Space, Epoch 1180\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1190:1903999.0"
+  tensor_path: "1903999.0/Latent Space, Epoch 1190\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1200:1919999.0"
+  tensor_path: "1919999.0/Latent Space, Epoch 1200\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1210:1935999.0"
+  tensor_path: "1935999.0/Latent Space, Epoch 1210\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1220:1951999.0"
+  tensor_path: "1951999.0/Latent Space, Epoch 1220\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1230:1967999.0"
+  tensor_path: "1967999.0/Latent Space, Epoch 1230\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1240:1983999.0"
+  tensor_path: "1983999.0/Latent Space, Epoch 1240\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1250:1999999.0"
+  tensor_path: "1999999.0/Latent Space, Epoch 1250\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1260:2015999.0"
+  tensor_path: "2015999.0/Latent Space, Epoch 1260\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1270:2031999.0"
+  tensor_path: "2031999.0/Latent Space, Epoch 1270\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1280:2047999.0"
+  tensor_path: "2047999.0/Latent Space, Epoch 1280\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1290:2063999.0"
+  tensor_path: "2063999.0/Latent Space, Epoch 1290\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1300:2079999.0"
+  tensor_path: "2079999.0/Latent Space, Epoch 1300\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1310:2095999.0"
+  tensor_path: "2095999.0/Latent Space, Epoch 1310\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1320:2111999.0"
+  tensor_path: "2111999.0/Latent Space, Epoch 1320\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1330:2127999.0"
+  tensor_path: "2127999.0/Latent Space, Epoch 1330\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1340:2143999.0"
+  tensor_path: "2143999.0/Latent Space, Epoch 1340\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1350:2159999.0"
+  tensor_path: "2159999.0/Latent Space, Epoch 1350\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1360:2175999.0"
+  tensor_path: "2175999.0/Latent Space, Epoch 1360\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1370:2191999.0"
+  tensor_path: "2191999.0/Latent Space, Epoch 1370\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1380:2207999.0"
+  tensor_path: "2207999.0/Latent Space, Epoch 1380\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1390:2223999.0"
+  tensor_path: "2223999.0/Latent Space, Epoch 1390\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1400:2239999.0"
+  tensor_path: "2239999.0/Latent Space, Epoch 1400\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1410:2255999.0"
+  tensor_path: "2255999.0/Latent Space, Epoch 1410\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1420:2271999.0"
+  tensor_path: "2271999.0/Latent Space, Epoch 1420\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1430:2287999.0"
+  tensor_path: "2287999.0/Latent Space, Epoch 1430\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1440:2303999.0"
+  tensor_path: "2303999.0/Latent Space, Epoch 1440\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1450:2319999.0"
+  tensor_path: "2319999.0/Latent Space, Epoch 1450\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1460:2335999.0"
+  tensor_path: "2335999.0/Latent Space, Epoch 1460\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1470:2351999.0"
+  tensor_path: "2351999.0/Latent Space, Epoch 1470\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 1480:2367999.0"
+  tensor_path: "2367999.0/Latent Space, Epoch 1480\\tensors.tsv"
+}

@@ -113,7 +113,8 @@ class experiment:
             'epoch': epoch,
             'state_dict': self.model.state_dict(),
             'optimizer': optimizer.state_dict(),
-            'batch_trlosses': self.batch_trlosses
+            'batch_trlosses': self.batch_trlosses,
+            'global_step': self.global_index
             # 'valosses': self.valosses
         }
         torch.save(state, path)
@@ -127,6 +128,7 @@ class experiment:
 
             # self.valosses.extend(checkpoint['valosses'])
             self.batch_trlosses.extend(checkpoint['batch_trlosses'])
+            self.global_index = checkpoint['global_step']
             return start_epoch
         else:
             raise FileNotFoundError(f"No checkpoint found at '{path}'")
@@ -205,12 +207,6 @@ class experiment:
         log_dir = f"./Training Logs/{self.timestamp}/tensorboard"
         writer_train = SummaryWriter(log_dir=log_dir+'/train')
         writer_val = SummaryWriter(log_dir=log_dir+'/validation')
-        # layout = {
-        #     "Performance" : {
-        #         "loss": ["Multiline", ["loss/train", "loss/validation"]]
-        #     },
-        # }
-        # writer_train.add_custom_scalars(layout)
         logger.info(f'Tensorboard writers created. Tensorboard logs will be saved to "{log_dir}".')
 
         self.tensorboard_ready = threading.Event()
@@ -257,7 +253,7 @@ class experiment:
                 self.model.train()
                 randint = random.randint(0, self.num_batches-1) # -1 to avoid index out of range
                 for i, batch in enumerate(self.trloader):
-                    global_index = (epoch-1) * self.num_batches + i
+                    self.global_index = (epoch-1) * self.num_batches + i
                     batch_start = time.time()
 
                     batch = batch.view(batch.size(0), 1, 28, 28)
@@ -266,13 +262,13 @@ class experiment:
                     optimizer.zero_grad()
 
                     # debugging -----------------------
-                    if i == randint: 
-                        writer_train.add_figure(f'Images Before Forward Pass - Batch {i}, Epoch {epoch}',
-                                                 self.debug_plots(batch)[0],
-                                                 global_step=global_index)
-                        writer_train.add_figure(f'Pixel Value Histograms - Batch {i}, Epoch {epoch}',
-                                                self.debug_plots(batch)[1],
-                                                global_step=global_index)
+                    # if i == randint: 
+                    #     writer_train.add_figure(f'Images Before Forward Pass - Batch {i}, Epoch {epoch}',
+                    #                              self.debug_plots(batch)[0],
+                    #                              global_step=self.global_index)
+                    #     writer_train.add_figure(f'Pixel Value Histograms - Batch {i}, Epoch {epoch}',
+                    #                             self.debug_plots(batch)[1],
+                    #                             global_step=self.global_index)
                     # ---------------------------------
 
                     outputs, mean, log_var = self.model(batch)
@@ -284,7 +280,7 @@ class experiment:
                     formatted_time = str(elapsed_time).split(".")[0] + f".{int(elapsed_time.microseconds / 10000):02d}"
                     learning_rate = optimizer.param_groups[0]['lr']
 
-                    writer_train.add_scalar('loss', batch_loss.item(), global_index)
+                    writer_train.add_scalar('loss', batch_loss.item(), self.global_index)
                     batch_log = f'({formatted_time}) | [{self.epoch}/{epochs}] Batch {i} ({batch_time:.3f}s) | LR: {learning_rate} | KLW: {klw}, KLD (loss): {kld:.3f}, Rec. Loss: {reconstruction_loss:.8f} | Total Loss: {batch_loss.item():.8f}'
                     logger.info(batch_log)
                     batch_times.append(batch_time)
@@ -314,7 +310,7 @@ class experiment:
                     formatted_time = str(elapsed_time).split(".")[0] + f".{int(elapsed_time.microseconds / 10000):02d}"
                     learning_rate = optimizer.param_groups[0]['lr']
 
-                    writer_val.add_scalar('loss', avg_val_loss, global_index)
+                    writer_val.add_scalar('loss', avg_val_loss, self.global_index)
                     val_log = f'({formatted_time}) | VALIDATION (Epoch {self.epoch}/{epochs}) | LR: {learning_rate} | KLW: {klw}, KLD (loss): {kld:.3f}, Rec. Loss: {reconstruction_loss:.8f} | Total Loss: {avg_val_loss:.8f} -----------'
                     logger.info(val_log)
                 
@@ -325,13 +321,13 @@ class experiment:
                     logger.info(f'Checkpoint saved for epoch {self.epoch}.')
 
                     self.evaluate()
-                    writer_val.add_figure(f'Generated Samples, Epoch {self.epoch}', self.generate_samples(num_images=50), global_step=global_index)
+                    writer_val.add_figure(f'Generated Samples, Epoch {self.epoch}', self.generate_samples(num_images=50), global_step=self.global_index)
                     logger.info(f'Generated images created for epoch {self.epoch}.')
 
                     logger.info(f'Creating latent space plot for epoch {self.epoch}...')
                     latent_vectors = self.latent_space()
                     logger.info(f'Latent vectors shape: {latent_vectors.shape}')
-                    writer_val.add_embedding(latent_vectors,  tag=f'Latent Space, Epoch {self.epoch}', global_step=global_index)
+                    writer_val.add_embedding(latent_vectors,  tag=f'Latent Space, Epoch {self.epoch}', global_step=self.global_index)
                     logger.info(f'Latent space plot created for epoch {self.epoch}.')
 
                 # clear_output(wait=True)
@@ -350,13 +346,13 @@ class experiment:
             logger.info(f'Checkpoint saved for epoch {self.epoch}.')
             
             self.evaluate()
-            writer_val.add_figure(f'Generated Samples, Epoch {self.epoch}', self.generate_samples(num_images=50), global_step=global_index)
+            writer_val.add_figure(f'Generated Samples, Epoch {self.epoch}', self.generate_samples(num_images=50), global_step=self.global_index)
             logger.info(f'Generated images created for epoch {self.epoch}.')
             
             logger.info(f'Creating latent space plot for epoch {self.epoch}...')
             latent_vectors = self.latent_space()
             logger.info(f'Latent vectors shape: {latent_vectors.shape}')
-            writer_val.add_embedding(latent_vectors,  tag=f'Latent Space, Epoch {self.epoch}', global_step=global_index)
+            writer_val.add_embedding(latent_vectors,  tag=f'Latent Space, Epoch {self.epoch}', global_step=self.global_index)
             logger.info(f'Latent space plot created for epoch {self.epoch}.')
 
             writer_train.close()
