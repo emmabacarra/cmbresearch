@@ -1,0 +1,68 @@
+embeddings {
+  tensor_name: "Latent Space, Epoch 10:15999.0"
+  tensor_path: "15999.0/Latent Space, Epoch 10\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 20:31999.0"
+  tensor_path: "31999.0/Latent Space, Epoch 20\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 30:47999.0"
+  tensor_path: "47999.0/Latent Space, Epoch 30\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 40:63999.0"
+  tensor_path: "63999.0/Latent Space, Epoch 40\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 50:79999.0"
+  tensor_path: "79999.0/Latent Space, Epoch 50\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 60:95999.0"
+  tensor_path: "95999.0/Latent Space, Epoch 60\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 70:111999.0"
+  tensor_path: "111999.0/Latent Space, Epoch 70\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 80:127999.0"
+  tensor_path: "127999.0/Latent Space, Epoch 80\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 90:143999.0"
+  tensor_path: "143999.0/Latent Space, Epoch 90\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 100:159999.0"
+  tensor_path: "159999.0/Latent Space, Epoch 100\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 110:175999.0"
+  tensor_path: "175999.0/Latent Space, Epoch 110\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 120:191999.0"
+  tensor_path: "191999.0/Latent Space, Epoch 120\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 130:207999.0"
+  tensor_path: "207999.0/Latent Space, Epoch 130\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 140:223999.0"
+  tensor_path: "223999.0/Latent Space, Epoch 140\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 150:239999.0"
+  tensor_path: "239999.0/Latent Space, Epoch 150\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 160:255999.0"
+  tensor_path: "255999.0/Latent Space, Epoch 160\\tensors.tsv"
+}
+embeddings {
+  tensor_name: "Latent Space, Epoch 170:271999.0"
+  tensor_path: "271999.0/Latent Space, Epoch 170\\tensors.tsv"
+}

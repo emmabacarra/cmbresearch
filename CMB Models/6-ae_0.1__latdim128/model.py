@@ -71,7 +71,7 @@ class ConvVAE(nn.Module):
             z = self.decoder(z).to(device)
         else: # AEs (deterministic)
             z = self.fc3(mu)
-            z = self.decoder(mu).to(device)
+            z = self.decoder(z).to(device)
 
         return z, mu, logvar
     

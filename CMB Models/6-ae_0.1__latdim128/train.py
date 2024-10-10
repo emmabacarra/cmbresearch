@@ -19,15 +19,15 @@ stochastic = False  # setting to False makes this deterministic (no sampling) - 
 batch_size = 100
 train_split_percent = 0.8
 
-image_channels=1  # 1 is grayscale, 3 is RGB
-init_channels=8
-kernel_size=14
-stride=2
-padding=12
+# image_channels=1  # 1 is grayscale, 3 is RGB
+# init_channels=8
+# kernel_size=14
+# stride=2
+# padding=12
 
 latent_dim=128
-leak=0.2
-drop=0.01
+# leak=0.2
+# drop=0.01
 
 learning_rate = 1e-8
 num_epochs = 10000
@@ -59,4 +59,8 @@ exec(open('../generic_trainer.py').read())
 - changed latent dimensions to 128
 - made deterministic (i.e. autoencoder) --> may not have implemented properly, might need to retrain
 - full training, stopped when loss plot plateaued
+
+10-10-24__00-03-19
+- adjusted deterministic implementation (should actually be deterministic now)
+- exploded to inf loss, so reducing learning rate to 1e-10
 '''
