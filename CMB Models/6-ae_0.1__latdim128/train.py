@@ -54,5 +54,9 @@ exec(open('../generic_trainer.py').read())
 
 '''
 ======================================================================================================================================
-
+10-06-24__23-53-05
+- copied from model 0.1
+- changed latent dimensions to 128
+- made deterministic (i.e. autoencoder) --> may not have implemented properly, might need to retrain
+- full training, stopped when loss plot plateaued
 '''

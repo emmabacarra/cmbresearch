@@ -43,7 +43,7 @@ model = ConvVAE(
     # latent_dim=latent_dim,
     # leak=leak,
     # drop=drop,
-    # stochastic=stochastic
+    stochastic=stochastic
 ).to(device)
 
 nnet = experiment(model, train_loader, val_loader, batch_size)

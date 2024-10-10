@@ -12,12 +12,13 @@ class UnFlatten(nn.Module):
         return input.view(input.size(0), size, 1, 1)
 
 class ConvVAE(nn.Module):
-    def __init__(self, image_channels=1, h_dim=1024, latent_dim=128):
+    def __init__(self, image_channels=1, h_dim=1024, latent_dim=128, stochastic=False):
         super(ConvVAE, self).__init__()
 
         self.image_channels = image_channels
         self.h_dim = h_dim
         self.latent_dim = latent_dim
+        self.stochastic = stochastic
 
         self.encoder = nn.Sequential(
             nn.Conv2d(image_channels, 32, kernel_size=3, stride=2, padding=1),  # 28x28 -> 14x14
@@ -65,8 +66,12 @@ class ConvVAE(nn.Module):
         z, mu, logvar = self.bottleneck(h)
 
         # decoder
-        z = self.fc3(z)
-        z = self.decoder(z).to(device)
+        if self.stochastic: # VAEs (stochastic)
+            z = self.fc3(z)
+            z = self.decoder(z).to(device)
+        else: # AEs (deterministic)
+            z = self.fc3(mu)
+            z = self.decoder(mu).to(device)
 
         return z, mu, logvar
     
